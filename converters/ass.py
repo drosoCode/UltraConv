@@ -3,9 +3,10 @@ from models.ultrastar import UltrastarFile
 
 import re
 from math import floor
+from typing import List
 
 class AssConverter:
-    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([A-Za-z'’]+)( ?)")
+    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([A-zÀ-ú'’,]+)( ?)")
     bpm = 250
 
     def __init__(self, bpm=250):
@@ -23,17 +24,14 @@ class AssConverter:
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
 
-    def convert(self, file_path) -> UltrastarFile:
+    def convert(self, lyrics: List[str]) -> UltrastarFile:
         ultrastar = UltrastarFile()
         ultrastar.bpm = self.bpm
         ret = []
         is_gap_set = False
         
-        with open(file_path, "r", encoding="utf8") as f:
-            ass_data = f.readlines()
-
         prev_end = 0
-        for i in ass_data:
+        for i in lyrics:
             # iterate over lines of text
             if len(i) > 9 and i[0:9] == "Comment: ":
                 s = i.split(",")
