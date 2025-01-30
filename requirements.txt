@@ -3,3 +3,4 @@ basic-pitch[tf]
 demucs
 syncedlyrics
 requests
+yt-dlp
