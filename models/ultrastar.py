@@ -9,28 +9,46 @@ class UltrastarFile:
     artist: str = ""
     title: str = ""
     mp3: str = ""
+    vocals: str = ""
+    instrumental: str = ""
+    video: str = ""
+
+    file_path: str = ""
 
     def __init__(self):
         pass
 
-    def write(self, file_path: str):
+    def write(self, path: str = ""):
+        if path == "":
+            path = self.file_path
+        else:
+            self.file_path = path
+        
         lines = [
             f"#TITLE:{self.title}",
             f"#ARTIST:{self.artist}",
             f"#MP3:{self.mp3}",
+            f"#AUDIO:{self.mp3}",
             f"#BPM:{self.bpm}",
         ]
         lines.append(f"#GAP:{self.gap}")
+        if self.vocals != "":
+            lines.append(f"#VOCALS:{self.vocals}")
+        if self.instrumental != "":
+            lines.append(f"#INSTRUMENTAL:{self.instrumental}")
+        if self.video != "":
+            lines.append(f"#VIDEO:{self.video}")
 
         for i in self.events:
             lines.append(i.to_ultrastar())
         lines.append("E")
 
-        with open(file_path, "w+", encoding="utf8") as f:
+        with open(path, "w+", encoding="utf8") as f:
             f.write("\n".join(lines))
 
-    def read(self, file_path: str):
-        with open(file_path, "r", encoding="utf8") as f:
+    def read(self, path: str):
+        self.file_path = path
+        with open(path, "r", encoding="utf8") as f:
             data = f.readlines()
         
         for l in data:
@@ -49,10 +67,18 @@ class UltrastarFile:
                         self.artist = value
                     elif s[0] == "MP3":
                         self.mp3 = value
+                    elif s[0] == "AUDIO":
+                        self.mp3 = value
                     elif s[0] == "BPM":
                         self.bpm = int(value)
                     elif s[0] == "GAP":
                         self.gap = int(value)
+                    elif s[0] == "INSTRUMENTAL":
+                        self.instrumental = value
+                    elif s[0] == "VOCALS":
+                        self.vocals = value
+                    elif s[0] == "VIDEO":
+                        self.video = value
             
             elif l[0] == "-":
                 self.events.append(UltrastarBreak(int(l[2:])))
