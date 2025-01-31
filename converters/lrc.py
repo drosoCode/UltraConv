@@ -68,7 +68,6 @@ class LrcConverter:
                     if i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
                         next_start = self._parse_time(lyrics[i+1][1:9])
                     line_duration = (next_start-start)*self.line_length_pct # use 90% of line length for word, and keep 10% for the break
-                    next_break = (next_start-start)*(1-self.line_length_pct)
                     avg_sec_by_word = line_duration/nb_letters
 
                 # processing =================
@@ -77,7 +76,12 @@ class LrcConverter:
                     is_gap_set = True
                     ultrastar.gap = floor(start)
                 else:
-                    ret.append(UltrastarBreak(floor(self._sec_to_bpm(next_break))))
+                    if not is_word_by_word or self.ignore_words:
+                        prev_line = self._parse_time(lyrics[i-1][1:9])
+                        break_duration = ((start-prev_line)*(1-self.line_length_pct))
+                        ret.append(UltrastarBreak(floor(self._sec_to_bpm(start-break_duration))))
+                    else:
+                        ret.append(UltrastarBreak(floor(self._sec_to_bpm(next_break))))
                 
                 txt_len = len(txt)
                 total_sec = start
@@ -91,7 +95,8 @@ class LrcConverter:
                         elif i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
                             # if not available, take start of next line
                             next_sec = self._parse_time(lyrics[i+1][1:9])
-                            next_break = ((next_sec-start_sec)*(1-self.word_length_pct)) # use the remaining 10% of the timeframe for the break (see duration_sec below)
+                            word_duration = ((next_sec-start_sec)*self.word_length_pct) # use the remaining 10% of the timeframe for the break (see duration_sec below)
+                            next_break = start_sec+word_duration
                         else:
                             # if not available, use an arbitrary time of 3 sec
                             next_sec = start_sec + 3
