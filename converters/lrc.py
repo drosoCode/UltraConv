@@ -7,14 +7,21 @@ from typing import List
 
 # sometimes lrc are not well synced
 # we can use this to check beforehand: https://mikezzb.github.io/lrc-player/
+# in the case of non well synced lyrics, use the ignore_words=True flag to ignore this data and use the syncing algorithm
 
 class LrcConverter:
     LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([A-zÀ-ú'’,]+)")
     LRC_LINE_REG = re.compile(r"([A-zÀ-ú'’,]+) *")
-    bpm = 250
+    bpm = 0
+    ignore_words = False
+    line_length_pct = 0
+    word_length_pct = 0
 
-    def __init__(self, bpm=250):
+    def __init__(self, bpm=400, ignore_words=False, line_length_pct=0.95, word_length_pct=0.8):
         self.bpm = bpm
+        self.ignore_words = ignore_words
+        self.line_length_pct = line_length_pct
+        self.word_length_pct = word_length_pct
 
     def _parse_time(self, time_str):
         # Convert a time string in the format MM:SS.MS to the number of seconds
@@ -57,11 +64,11 @@ class LrcConverter:
                 if nb_letters == 0:
                     continue
 
-                if not is_word_by_word:
+                if not is_word_by_word or self.ignore_words:
                     if i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
                         next_start = self._parse_time(lyrics[i+1][1:9])
-                    line_duration = (next_start-start)*0.9 # use 95% of line length for word, and keep 5% for the break
-                    next_break = (next_start-start)*0.1
+                    line_duration = (next_start-start)*self.line_length_pct # use 90% of line length for word, and keep 10% for the break
+                    next_break = (next_start-start)*(1-self.line_length_pct)
                     avg_sec_by_word = line_duration/nb_letters
 
                 # processing =================
@@ -75,7 +82,7 @@ class LrcConverter:
                 txt_len = len(txt)
                 total_sec = start
                 for j in range(txt_len):
-                    if is_word_by_word:
+                    if is_word_by_word and not self.ignore_words:
                         word = txt[j][1]
                         start_sec = self._parse_time(txt[j][0])
                         if j+1 < txt_len:
@@ -84,18 +91,20 @@ class LrcConverter:
                         elif i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
                             # if not available, take start of next line
                             next_sec = self._parse_time(lyrics[i+1][1:9])
-                            next_break = ((next_sec-start_sec)*0.2) # use the remaining 20% of the timeframe for the break (see duration_sec below)
+                            next_break = ((next_sec-start_sec)*(1-self.word_length_pct)) # use the remaining 10% of the timeframe for the break (see duration_sec below)
                         else:
                             # if not available, use an arbitrary time of 3 sec
                             next_sec = start_sec + 3
-                        duration_sec = (next_sec-start_sec)*0.8 # use only 80% of the timeframe as we also need "blank" space between words
+                        duration_sec = (next_sec-start_sec)*self.word_length_pct # use only 80% of the timeframe as we also need "blank" space between words
                     else:
-                        word = txt[j]
+                        if self.ignore_words:
+                            word = txt[j][1]
+                        else:
+                            word = txt[j]
                         start_sec = total_sec
                         duration_sec = len(word)*avg_sec_by_word
                         total_sec += duration_sec
-                        duration_sec *= 0.8 # use only 80% of the timeframe as we also need "blank" space between words
-                    
+                        duration_sec *= self.word_length_pct # use only 80% of the timeframe as we also need "blank" space between words
                     
                     # StartBeat, Length, Pitch, Text
                     ret.append(UltrastarText(time=self._sec_to_bpm(start_sec), length=self._sec_to_bpm(duration_sec), pitch=0, start_space=True, text=word))
