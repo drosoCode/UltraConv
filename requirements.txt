@@ -1,7 +1,6 @@
-basic-pitch
-basic-pitch[tf]
 demucs
 diffq
 syncedlyrics
 requests
 yt-dlp
+ultrastar-pitch

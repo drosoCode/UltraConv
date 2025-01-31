@@ -48,6 +48,7 @@ class UltrastarFile:
 
     def read(self, path: str):
         self.file_path = path
+        self.events = []
         with open(path, "r", encoding="utf8") as f:
             data = f.readlines()
         
