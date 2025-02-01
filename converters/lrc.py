@@ -10,8 +10,8 @@ from typing import List
 # in the case of non well synced lyrics, use the ignore_words=True flag to ignore this data and use the syncing algorithm
 
 class LrcConverter:
-    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([A-zÀ-ú'’,]+)")
-    LRC_LINE_REG = re.compile(r"([A-zÀ-ú'’,]+) *")
+    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([\w'’,]+)")
+    LRC_LINE_REG = re.compile(r"([\w'’,]+) *")
     bpm = 0
     ignore_words = False
     line_length_pct = 0

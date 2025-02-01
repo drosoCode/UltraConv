@@ -50,3 +50,7 @@ class SplitterProcessor:
         data.vocals = "vocals.mp3"
 
         return data
+
+    @staticmethod
+    def get_models():
+        return MODELS

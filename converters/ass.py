@@ -6,7 +6,7 @@ from math import floor
 from typing import List
 
 class AssConverter:
-    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([A-zÀ-ú'’,]+)( ?)")
+    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([\w'’,]+)( ?)")
     bpm = 250
 
     def __init__(self, bpm=250):

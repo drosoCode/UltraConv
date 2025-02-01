@@ -4,3 +4,4 @@ syncedlyrics
 requests
 yt-dlp
 ultrastar-pitch
+https://github.com/cgohlke/pyicu-build/releases/download/v2.14/PyICU-2.14-cp310-cp310-win_amd64.whl
