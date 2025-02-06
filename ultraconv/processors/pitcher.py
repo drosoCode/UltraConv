@@ -3,7 +3,7 @@ from ultrastar_pitch import DetectionPipeline, AudioPreprocessor, PitchClassifie
 from pathlib import Path
 import os
 
-from models.ultrastar import UltrastarFile
+from ultraconv.models import UltrastarFile
 
 class PitcherProcessor:
 

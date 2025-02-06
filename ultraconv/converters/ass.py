@@ -1,5 +1,4 @@
-from models.events import *
-from models.ultrastar import UltrastarFile
+from ultraconv.models import *
 
 import re
 from math import floor

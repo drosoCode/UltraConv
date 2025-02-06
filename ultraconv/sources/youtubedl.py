@@ -1,5 +1,5 @@
 from yt_dlp import YoutubeDL
-from models.song import SearchSong
+from ultraconv.models import SearchSong
 from typing import List
 from urllib.parse import urlparse
 import os

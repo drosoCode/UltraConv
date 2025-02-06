@@ -13,10 +13,10 @@ def get_tools_frame(notebook, w, h) -> ttk.Frame:
     import_lrc_bpm_number = ttk.Spinbox(tools_frame, from_=0, to=1000)
     import_lrc_bpm_number.set(400)
     import_lrc_line_pct_label = ttk.Label(tools_frame, text="Line percentage")
-    import_lrc_line_pct = ttk.Spinbox(tools_frame, from_=0, to=1, increment=0.05)
+    import_lrc_line_pct = ttk.Spinbox(tools_frame, from_=0, to=1, increment=0.01)
     import_lrc_line_pct.set(0.95)
     import_lrc_word_pct_label = ttk.Label(tools_frame, text="Word percentage")
-    import_lrc_word_pct = ttk.Spinbox(tools_frame, from_=0, to=1, increment=0.05)
+    import_lrc_word_pct = ttk.Spinbox(tools_frame, from_=0, to=1, increment=0.01)
     import_lrc_word_pct.set(0.8)
     
     import_ass_button = ttk.Button(tools_frame, text="Import ASS")

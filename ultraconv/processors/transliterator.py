@@ -1,4 +1,4 @@
-from models.ultrastar import UltrastarFile, UltrastarText
+from ultraconv.models import UltrastarFile, UltrastarText
 
 import icu
 

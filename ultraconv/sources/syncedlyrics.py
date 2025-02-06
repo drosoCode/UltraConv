@@ -1,6 +1,6 @@
 import syncedlyrics
 from typing import List
-from models.song import SearchSong
+from ultraconv.models import SearchSong
 
 class MusixMatchSource:
     def __init__(self):

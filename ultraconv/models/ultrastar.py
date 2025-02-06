@@ -1,10 +1,10 @@
-from models.events import UltrastarEvent, UltrastarNote, UltrastarBreak, UltrastarText
+from ultraconv.models import UltrastarEvent, UltrastarNote, UltrastarBreak, UltrastarText
 
 from typing import List
 
 class UltrastarFile:
     events: List[UltrastarEvent] = []
-    bpm: int = 0
+    bpm: float = 0
     gap: int = 0
     artist: str = ""
     title: str = ""
@@ -18,12 +18,7 @@ class UltrastarFile:
     def __init__(self):
         pass
 
-    def write(self, path: str = ""):
-        if path == "":
-            path = self.file_path
-        else:
-            self.file_path = path
-        
+    def get_file_data(self):
         lines = [
             f"#TITLE:{self.title}",
             f"#ARTIST:{self.artist}",
@@ -43,6 +38,16 @@ class UltrastarFile:
             lines.append(i.to_ultrastar())
         lines.append("E")
 
+        return lines
+
+    def write(self, path: str = ""):
+        if path == "":
+            path = self.file_path
+        else:
+            self.file_path = path
+
+        lines = self.get_file_data()
+    
         with open(path, "w+", encoding="utf8") as f:
             f.write("\n".join(lines))
 
@@ -71,7 +76,7 @@ class UltrastarFile:
                     elif s[0] == "AUDIO":
                         self.mp3 = value
                     elif s[0] == "BPM":
-                        self.bpm = int(value)
+                        self.bpm = float(value)
                     elif s[0] == "GAP":
                         self.gap = int(value)
                     elif s[0] == "INSTRUMENTAL":

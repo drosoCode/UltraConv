@@ -1,7 +1,7 @@
 import os
 import requests
-from models.song import SearchSong
-from processors.downloader import download_file
+from ultraconv.models import SearchSong
+from ultraconv.processors import download_file
 from typing import List
 
 API_ENDPOINT = "https://kara.moe/api"

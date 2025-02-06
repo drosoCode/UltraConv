@@ -1,5 +1,5 @@
 import demucs.separate
-from models.ultrastar import UltrastarFile
+from ultraconv.models import UltrastarFile
 from pathlib import Path
 import os
 import shutil
