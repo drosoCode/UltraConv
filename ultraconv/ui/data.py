@@ -43,14 +43,18 @@ class UserData:
         return Path(UserData.ultrastar_file.file_path).parent
 
     @staticmethod
-    def start_task(fn, /, *args, **kwargs):
+    def start_task(callback, fn, /, *args, **kwargs):
+        if UserData._future is not None:
+            return False
+        UserData._callback = callback
         UserData._future = UserData._executor.submit(fn, *args, **kwargs)
         UserData.ui_root.after(500, UserData._check_task)
+        return True
 
     @staticmethod
     def _check_task():
-        if UserData._future.is_done():
+        if UserData._future.done():
             UserData._callback(UserData._future.result())
+            UserData._future = None
         else:
-            UserData.ui_root.after(500, UserData._check_task)
-
+            UserData.ui_root.after(1000, UserData._check_task)

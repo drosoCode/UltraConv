@@ -127,25 +127,28 @@ class DownloadTab:
         UserData.set_message("Searching ...")
         UserData.set_progress_bar(-1)
 
-        UserData.start_task(self._search_click_thread)
         # clear previous results
         self._clear_results()
-        # retrieve new results
-        data = self.provider.search_songs(self.search_bar.get(), int(self.search_item_number.get()))
-        # display new results
-        for i in data:
-            self.provider_results[i.id] = i
-            duration = ""
-            if i.duration > 0:
-                m, s = divmod(i.duration, 60)
-                duration = f"{m}:{s} min"
-            year = ""
-            if i.year > 0:
-                year = f"({i.year})"
-            self.search_results.insert("", "end", text=f"{i.track} - {i.artist} {year} {duration}", values=(i.id))
+
+        # callback to display new results
+        def callback(data):
+            for i in data:
+                self.provider_results[i.id] = i
+                duration = ""
+                if i.duration > 0:
+                    m, s = divmod(i.duration, 60)
+                    duration = f"{m}:{s} min"
+                year = ""
+                if i.year > 0:
+                    year = f"({i.year})"
+                self.search_results.insert("", "end", text=f"{i.track} - {i.artist} {year} {duration}", values=(i.id))
+            
+            UserData.set_message("Done !")
+            UserData.set_progress_bar(1)
         
-        UserData.set_message("Done !")
-        UserData.set_progress_bar(1)
+        # retrieve new results
+        UserData.start_task(callback, self.provider.search_songs, self.search_bar.get(), int(self.search_item_number.get()))
+
 
     def _dl_lyrics_click(self):
         # get selected search result
