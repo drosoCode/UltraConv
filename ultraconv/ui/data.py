@@ -48,6 +48,7 @@ class UserData:
     @staticmethod
     def start_task(callback, fn, /, *args, **kwargs):
         if UserData._future is not None:
+            print("Error: task already running")
             return False
         UserData._callback = callback
         UserData._future = UserData._executor.submit(fn, *args, **kwargs)
@@ -57,7 +58,8 @@ class UserData:
     @staticmethod
     def _check_task():
         if UserData._future.done():
-            UserData._callback(UserData._future.result())
+            ret = UserData._future.result()
             UserData._future = None
+            UserData._callback(ret)
         else:
             UserData.ui_root.after(1000, UserData._check_task)

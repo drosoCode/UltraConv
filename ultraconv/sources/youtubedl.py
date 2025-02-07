@@ -35,7 +35,10 @@ class YoutubeDLSource:
         return ret
 
     def download_video(self, song: SearchSong, path: str):
-        self._opts["outtmpl"] = os.path.join(path, "video.webm")
+        p = os.path.join(path, "video.webm")
+        if os.path.exists(p):
+            os.remove(p)
+        self._opts["outtmpl"] = p
         ytdl = YoutubeDL(self._opts)
         ytdl.download([song.id])
-        return os.path.join(path, "video.webm")
+        return p

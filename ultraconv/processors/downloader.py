@@ -10,4 +10,4 @@ def download_file(url: str, out_file: str):
     return out_file
 
 def ffmpeg_convert(src_path, dst_path):
-    subprocess.run(["ffmpeg", "-i", src_path, dst_path])
+    subprocess.run(["ffmpeg", "-y", "-i", src_path, dst_path])

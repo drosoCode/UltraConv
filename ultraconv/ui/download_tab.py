@@ -161,36 +161,65 @@ class DownloadTab:
         UserData.set_message("Downloading lyrics ...")
         UserData.set_progress_bar(-1)
 
-        # download lyrics
-        UserData.start_task(lyrics_cb, self.provider.download_lyrics, self.provider_results[id])
-
         def lyrics_cb(lyrics):
             # save lyrics to file
-            if self.save_file_checkbox.state()[0] == "selected":
+            if "selected" in self.save_file_checkbox.state():
                 with open(os.path.join(UserData.ultrastar_dir(), "lyrics.txt"), "w+") as f:
-                    f.write(lyrics)
+                    f.write("\n".join(lyrics))
 
             # convert lyrics and add them to the ultrastar file
             if isinstance(self.provider, KaramoeSource):
                 cvt = AssConverter(bpm=int(self.bpm_number.get()))
             else:
-                cvt = LrcConverter(bpm=int(self.bpm_number.get()), ignore_words=self.ignore_wbw_checkbox.get())
+                cvt = LrcConverter(bpm=int(self.bpm_number.get()), ignore_words=("selected" in self.ignore_wbw_checkbox.state()))
             UserData.ultrastar_file = cvt.convert(lyrics, ultrastar_file=UserData.ultrastar_file)
 
+            UserData.display_file()
             UserData.set_message("Done !")
             UserData.set_progress_bar(1)
 
+        # download lyrics
+        UserData.start_task(lyrics_cb, self.provider.download_lyrics, self.provider_results[id[0]])
 
     def _dl_video_click(self):
         item = self.search_results.focus()
         if item is None:
-            print("Error: No item selected")
+            UserData.set_message("Error: No item selected")
             return
         id = self.search_results.item(item)["values"]
 
-        path = self.provider.download_video(self.provider_results[id])
+        UserData.set_message("Downloading video ...")
+        UserData.set_progress_bar(-1)
         
-        if self.convert_audio_checkbox.state()[0] == "selected":
-            ffmpeg_convert(path, "audio.mp3")
-        if self.convert_video_checkbox.state()[0] == "selected":
-            ffmpeg_convert(path, "video.mp4")
+        def video_cb(path):
+            def end_cb(x=None):
+                if os.path.exists(os.path.join(UserData.ultrastar_dir(), "audio.mp3")):
+                    UserData.ultrastar_file.tags["AUDIO"] = "audio.mp3"
+                if os.path.exists(os.path.join(UserData.ultrastar_dir(), "video.mp4")):
+                    UserData.ultrastar_file.tags["VIDEO"] = "video.mp4"
+
+                UserData.display_file()
+                UserData.set_message("Done !")
+                UserData.set_progress_bar(1)
+
+            def audio_cvt_cb(x=None):
+                print("Done converting audio")
+                # convert video
+                vid = os.path.join(UserData.ultrastar_dir(), "video.mp4")
+                if "selected" in self.convert_video_checkbox.state() and not os.path.exists(vid):
+                    print("Converting video ...")
+                    UserData.set_message("Converting video ...")
+                    UserData.start_task(end_cb, ffmpeg_convert, path, vid)
+                else:
+                    end_cb()
+
+            # convert audio
+            if "selected" in self.convert_audio_checkbox.state():
+                print("Converting audio ...")
+                UserData.set_message("Converting audio ...")
+                UserData.start_task(audio_cvt_cb, ffmpeg_convert, path, os.path.join(UserData.ultrastar_dir(), "audio.mp3"))
+            else:
+                audio_cvt_cb()
+
+        # download video
+        UserData.start_task(video_cb, self.provider.download_video, self.provider_results[id[0]], UserData.ultrastar_dir())
