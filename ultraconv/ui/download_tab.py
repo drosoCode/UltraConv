@@ -3,6 +3,7 @@ from ultraconv.sources import KaramoeSource, MusixMatchSource, YoutubeDLSource
 from ultraconv.converters import AssConverter, LrcConverter
 from ultraconv.processors import ffmpeg_convert
 from .data import UserData
+import os
 
 SOURCES = ["Kara.moe", "Musixmatch", "Youtube"]
 
@@ -120,7 +121,6 @@ class DownloadTab:
 
     def _search_click(self):
         if self.provider is None:
-            print("Error: No provider selected")
             UserData.set_message("Error: No provider selected")
             return
         
@@ -154,25 +154,31 @@ class DownloadTab:
         # get selected search result
         item = self.search_results.focus()
         if item is None:
-            print("Error: No item selected")
+            UserData.set_message("Error: No item selected")
             return
         id = self.search_results.item(item)["values"]
 
+        UserData.set_message("Downloading lyrics ...")
+        UserData.set_progress_bar(-1)
+
         # download lyrics
-        lyrics = self.provider.download_lyrics(self.provider_results[id])
-        
-        # save lyrics to file
-        if self.save_file_checkbox.state()[0] == "selected":
-            with open("lyrics.txt", "w+") as f:
-                f.write(lyrics)
+        UserData.start_task(lyrics_cb, self.provider.download_lyrics, self.provider_results[id])
 
-        # convert lyrics and add them to the ultrastar file
-        if isinstance(self.provider, KaramoeSource):
-            cvt = AssConverter(bpm=int(self.bpm_number.get()))
-        else:
-            cvt = LrcConverter(bpm=int(self.bpm_number.get()), ignore_words=self.ignore_wbw_checkbox.get())
+        def lyrics_cb(lyrics):
+            # save lyrics to file
+            if self.save_file_checkbox.state()[0] == "selected":
+                with open(os.path.join(UserData.ultrastar_dir(), "lyrics.txt"), "w+") as f:
+                    f.write(lyrics)
 
-        uf = cvt.convert(lyrics)
+            # convert lyrics and add them to the ultrastar file
+            if isinstance(self.provider, KaramoeSource):
+                cvt = AssConverter(bpm=int(self.bpm_number.get()))
+            else:
+                cvt = LrcConverter(bpm=int(self.bpm_number.get()), ignore_words=self.ignore_wbw_checkbox.get())
+            UserData.ultrastar_file = cvt.convert(lyrics, ultrastar_file=UserData.ultrastar_file)
+
+            UserData.set_message("Done !")
+            UserData.set_progress_bar(1)
 
 
     def _dl_video_click(self):

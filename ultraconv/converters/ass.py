@@ -23,9 +23,8 @@ class AssConverter:
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
 
-    def convert(self, lyrics: List[str]) -> UltrastarFile:
-        ultrastar = UltrastarFile()
-        ultrastar.bpm = self.bpm
+    def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
+        ultrastar_file.bpm = self.bpm
         ret = []
         is_gap_set = False
         
@@ -47,7 +46,7 @@ class AssConverter:
                 if not is_gap_set:
                     # if this is the first line, add the GAP
                     is_gap_set = True
-                    ultrastar.gap = floor(start)
+                    ultrastar_file.gap = floor(start)
                 else:
                     breakline = self._sec_to_bpm(prev_end) + ((self._sec_to_bpm(start)-self._sec_to_bpm(prev_end))*0.7)
                     ret.append(UltrastarBreak(floor(breakline)))
@@ -63,5 +62,5 @@ class AssConverter:
 
                 prev_end = total_sec
 
-        ultrastar.events = ret
-        return ultrastar
+        ultrastar_file.events = ret
+        return ultrastar_file

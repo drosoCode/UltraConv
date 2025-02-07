@@ -47,6 +47,7 @@ def run():
     # init UserData
     UserData.ui_root = root
     UserData._executor = ThreadPoolExecutor(max_workers=1)
+    UserData._future = None
 
     root.mainloop()
 

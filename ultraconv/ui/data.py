@@ -24,10 +24,13 @@ class UserData:
     @staticmethod
     def set_progress_bar(value):
         if value == 0:
+            UserData.ui_progress_bar.stop()
             UserData.ui_progress_bar.config(mode="determinate", maximum=1, value=0)
         elif value == 1:
+            UserData.ui_progress_bar.stop()
             UserData.ui_progress_bar.config(mode="determinate", maximum=1, value=1)
         else:
+            UserData.ui_progress_bar.stop()
             UserData.ui_progress_bar.config(mode="indeterminate")
             UserData.ui_progress_bar.start()
 

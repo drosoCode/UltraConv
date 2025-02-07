@@ -34,9 +34,8 @@ class LrcConverter:
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
 
-    def convert(self, lyrics: List[str]) -> UltrastarFile:
-        ultrastar = UltrastarFile()
-        ultrastar.bpm = self.bpm
+    def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
+        ultrastar_file.bpm = self.bpm
         ret = []
         is_gap_set = False
         
@@ -73,7 +72,7 @@ class LrcConverter:
                 if not is_gap_set:
                     # if this is the first line, add the GAP
                     is_gap_set = True
-                    ultrastar.gap = floor(start)
+                    ultrastar_file.gap = floor(start)
                 else:
                     if not is_word_by_word or self.ignore_words:
                         prev_line = self._parse_time(lyrics[i-1][1:9])
@@ -113,5 +112,5 @@ class LrcConverter:
                     # StartBeat, Length, Pitch, Text
                     ret.append(UltrastarText(time=self._sec_to_bpm(start_sec), length=self._sec_to_bpm(duration_sec), pitch=0, start_space=True, text=word))
 
-        ultrastar.events = ret
-        return ultrastar
+        ultrastar_file.events = ret
+        return ultrastar_file
