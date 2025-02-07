@@ -35,7 +35,7 @@ class LrcConverter:
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
 
     def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
-        ultrastar_file.bpm = self.bpm
+        ultrastar_file.tags["BPM"] = self.bpm
         ret = []
         is_gap_set = False
         
@@ -72,7 +72,7 @@ class LrcConverter:
                 if not is_gap_set:
                     # if this is the first line, add the GAP
                     is_gap_set = True
-                    ultrastar_file.gap = floor(start)
+                    ultrastar_file.tags["GAP"] = floor(start)
                 else:
                     if not is_word_by_word or self.ignore_words:
                         prev_line = self._parse_time(lyrics[i-1][1:9])

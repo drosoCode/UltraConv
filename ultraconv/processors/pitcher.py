@@ -11,14 +11,14 @@ class PitcherProcessor:
         self._postproc = postproc
 
     def run(self, data: UltrastarFile) -> UltrastarFile:
-        if data.vocals == "":
+        if data.tags.get("VOCALS") is None:
             return None
         
         # set mp3 to vocals file
         p = Path(data.file_path)
         filepath_bak = data.file_path
-        mp3_bak = data.mp3
-        data.mp3 = data.vocals
+        mp3_bak = data.tags["AUDIO"]
+        data.tags["AUDIO"] = data.tags["VOCALS"]
         data.file_path = os.path.join(p.parent, p.stem+"_tmp.txt")
         data.write()
 
@@ -31,7 +31,7 @@ class PitcherProcessor:
         data.read(data.file_path)
 
         # restore mp3
-        data.mp3 = mp3_bak
+        data.tags["AUDIO"] = mp3_bak
         os.remove(data.file_path)
         data.file_path = filepath_bak
 

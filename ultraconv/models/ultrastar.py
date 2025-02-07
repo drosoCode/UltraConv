@@ -4,14 +4,7 @@ from typing import List
 
 class UltrastarFile:
     events: List[UltrastarEvent] = []
-    bpm: float = 0
-    gap: int = 0
-    artist: str = ""
-    title: str = ""
-    mp3: str = ""
-    vocals: str = ""
-    instrumental: str = ""
-    video: str = ""
+    tags = {}
 
     file_path: str = ""
 
@@ -19,20 +12,9 @@ class UltrastarFile:
         pass
 
     def get_file_data(self):
-        lines = [
-            f"#TITLE:{self.title}",
-            f"#ARTIST:{self.artist}",
-            f"#MP3:{self.mp3}",
-            f"#AUDIO:{self.mp3}",
-            f"#BPM:{self.bpm}",
-        ]
-        lines.append(f"#GAP:{self.gap}")
-        if self.vocals != "":
-            lines.append(f"#VOCALS:{self.vocals}")
-        if self.instrumental != "":
-            lines.append(f"#INSTRUMENTAL:{self.instrumental}")
-        if self.video != "":
-            lines.append(f"#VIDEO:{self.video}")
+        lines = []
+        for t,v in self.tags.items():
+            lines.append(f"#{t}:{v}")
 
         for i in self.events:
             lines.append(i.to_ultrastar())
@@ -66,25 +48,9 @@ class UltrastarFile:
             if l[0] == "#":
                 s = l[1:].split(":")
                 value = s[1].strip("\n")
-                if len(s) >= 2:
-                    if s[0] == "TITLE":
-                        self.title = value
-                    elif s[0] == "ARTIST":
-                        self.artist = value
-                    elif s[0] == "MP3":
-                        self.mp3 = value
-                    elif s[0] == "AUDIO":
-                        self.mp3 = value
-                    elif s[0] == "BPM":
-                        self.bpm = float(value)
-                    elif s[0] == "GAP":
-                        self.gap = int(value)
-                    elif s[0] == "INSTRUMENTAL":
-                        self.instrumental = value
-                    elif s[0] == "VOCALS":
-                        self.vocals = value
-                    elif s[0] == "VIDEO":
-                        self.video = value
+                if s[0] in ("BPM", "GAP"):
+                    value = float(value)
+                self.tags[s[0]] = value
             
             elif l[0] == "-":
                 self.events.append(UltrastarBreak(int(l[2:])))
@@ -106,3 +72,7 @@ class UltrastarFile:
                         start_space=start_space,
                         pitch=int(s[3])
                     ))
+
+        # for retrocompatibility
+        if "AUDIO" not in self.tags:
+            self.tags["AUDIO"] = self.tags.get("MP3")

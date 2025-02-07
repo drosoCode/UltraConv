@@ -46,8 +46,8 @@ class SplitterProcessor:
         shutil.move(os.path.join(tmpm, "vocals.mp3"), os.path.join(p.parent, "vocals.mp3"))
         shutil.rmtree(tmp)
 
-        data.instrumental = "no_vocals.mp3"
-        data.vocals = "vocals.mp3"
+        data.tags["INSTRUMENTAL"] = "no_vocals.mp3"
+        data.tags["VOCALS"] = "vocals.mp3"
 
         return data
 
