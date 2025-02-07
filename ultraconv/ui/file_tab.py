@@ -10,6 +10,7 @@ PAD_Y = 5
 class FileTab:
 
     def __init__(self, notebook, w, h):
+        self._notebook = notebook
         self.frame = ttk.Frame(notebook, width=w, height=h, padding=20)
 
         self.open_button = ttk.Button(self.frame, text="Open txt")
@@ -41,6 +42,8 @@ class FileTab:
             UserData.set_message("File loaded successfully !")
             UserData.set_progress_bar(1)
             UserData.display_file()
+            self._notebook.tab(1, state="normal")
+            self._notebook.tab(2, state="normal")
         else:
             UserData.set_message("File open aborted")
 

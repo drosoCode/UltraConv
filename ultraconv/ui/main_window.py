@@ -34,6 +34,9 @@ def run():
     notebook.add(download_frame, text='Download')
     notebook.add(tools_frame, text='Tools')
 
+    notebook.tab(1, state="disabled")
+    notebook.tab(2, state="disabled")
+
     # add bottom widgets
     UserData.ui_progress_bar = ttk.Progressbar(root, orient="horizontal", mode="determinate", maximum=1, value=0)
     UserData.ui_status_text = ttk.Label(root, text="Please open a txt file")

@@ -164,7 +164,7 @@ class DownloadTab:
         def lyrics_cb(lyrics):
             # save lyrics to file
             if "selected" in self.save_file_checkbox.state():
-                with open(os.path.join(UserData.ultrastar_dir(), "lyrics.txt"), "w+") as f:
+                with open(os.path.join(UserData.ultrastar_dir(), "lyrics.txt"), "w+", encoding="utf8") as f:
                     f.write("\n".join(lyrics))
 
             # convert lyrics and add them to the ultrastar file
