@@ -36,12 +36,12 @@ class SplitterProcessor:
             "--shifts",
             str(self._shifts),
             "--mp3", 
-            os.path.join(p.parent, data.mp3),
+            os.path.join(p.parent, data.tags["AUDIO"]),
             "--out",
             tmp
         ])
 
-        tmpm = os.path.join(tmp, self._model, Path(data.mp3).stem)
+        tmpm = os.path.join(tmp, self._model, Path(data.tags["AUDIO"]).stem)
         shutil.move(os.path.join(tmpm, "no_vocals.mp3"), os.path.join(p.parent, "no_vocals.mp3"))
         shutil.move(os.path.join(tmpm, "vocals.mp3"), os.path.join(p.parent, "vocals.mp3"))
         shutil.rmtree(tmp)

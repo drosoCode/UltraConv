@@ -12,6 +12,9 @@ class UltrastarFile:
         pass
 
     def get_file_data(self):
+        if "MP3" not in self.tags:
+            self.tags["MP3"] = self.tags.get("AUDIO")
+        
         lines = []
         for t,v in self.tags.items():
             lines.append(f"#{t}:{v}")
@@ -76,3 +79,5 @@ class UltrastarFile:
         # for retrocompatibility
         if "AUDIO" not in self.tags:
             self.tags["AUDIO"] = self.tags.get("MP3")
+        if "MP3" not in self.tags:
+            self.tags["MP3"] = self.tags.get("AUDIO")

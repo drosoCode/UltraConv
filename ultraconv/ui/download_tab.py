@@ -153,7 +153,7 @@ class DownloadTab:
     def _dl_lyrics_click(self):
         # get selected search result
         item = self.search_results.focus()
-        if item is None:
+        if item == "":
             UserData.set_message("Error: No item selected")
             return
         id = self.search_results.item(item)["values"]
@@ -175,7 +175,7 @@ class DownloadTab:
             UserData.ultrastar_file = cvt.convert(lyrics, ultrastar_file=UserData.ultrastar_file)
 
             UserData.display_file()
-            UserData.set_message("Done !")
+            UserData.set_message("Lyrics Downloaded successfully !")
             UserData.set_progress_bar(1)
 
         # download lyrics
@@ -183,7 +183,7 @@ class DownloadTab:
 
     def _dl_video_click(self):
         item = self.search_results.focus()
-        if item is None:
+        if item == "":
             UserData.set_message("Error: No item selected")
             return
         id = self.search_results.item(item)["values"]
@@ -199,7 +199,7 @@ class DownloadTab:
                     UserData.ultrastar_file.tags["VIDEO"] = "video.mp4"
 
                 UserData.display_file()
-                UserData.set_message("Done !")
+                UserData.set_message("Video downloaded successfully !")
                 UserData.set_progress_bar(1)
 
             def audio_cvt_cb(x=None):
