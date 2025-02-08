@@ -16,6 +16,7 @@ def run():
     root = tkinter.Tk()
     root.geometry(f"{WIDTH}x{HEIGHT}")
     root.title('UltraConv')
+    root.resizable(width=False, height=False)
 
     notebook = ttk.Notebook(root)
 

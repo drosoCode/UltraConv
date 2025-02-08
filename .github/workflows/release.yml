@@ -20,7 +20,7 @@ jobs:
         pip install pyinstaller
 
     - name: Build app
-      run: pyinstaller --onefile main.py --name ultraconv
+      run: pyinstaller --onefile main.py --name ultraconv --collect-data sv_ttk
   
     - uses: actions/upload-artifact@v4
       with:
