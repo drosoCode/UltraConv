@@ -18,9 +18,11 @@ jobs:
       run: |
         pip install -r requirements.txt
         pip install pyinstaller
-        pyinstaller --onefile main.py --name ultraconv
+
+    - name: Build app
+      run: pyinstaller --onefile main.py --name ultraconv
   
     - uses: actions/upload-artifact@v4
       with:
         name: ultraconv
-        path: dist/windows
+        path: dist/ultraconv.exe
