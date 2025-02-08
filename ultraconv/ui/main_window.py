@@ -5,7 +5,7 @@ from concurrent.futures import ThreadPoolExecutor
 import sv_ttk
 
 from .download_tab import DownloadTab
-from .tools_tab import get_tools_frame
+from .tools_tab import ToolsTab
 from .file_tab import FileTab
 from .data import UserData
 
@@ -26,7 +26,7 @@ def run():
     download_frame = DownloadTab(notebook, WIDTH, HEIGHT).get_frame()
     download_frame.pack(fill='both', expand=True)
 
-    tools_frame = get_tools_frame(notebook, WIDTH, HEIGHT)
+    tools_frame = ToolsTab(notebook, WIDTH, HEIGHT).get_frame()
     tools_frame.pack(fill='both', expand=True)
 
     # add frames to notebook
