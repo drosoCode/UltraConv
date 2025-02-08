@@ -1,0 +1,26 @@
+name: Build App
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+    - uses: actions/checkout@v4
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install pyinstaller
+        pyinstaller --onefile main.py --name ultraconv
+  
+    - uses: actions/upload-artifact@v2
+      with:
+        name: ultraconv
+        path: dist/windows
