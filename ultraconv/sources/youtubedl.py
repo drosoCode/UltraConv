@@ -7,7 +7,7 @@ import os
 class YoutubeDLSource:
     # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extracting-information
     def __init__(self):
-        self._opts = {'format': 'bestaudio+bestvideo', 'noplaylist':'True'}
+        self._opts = {'format': 'bestaudio+bestvideo', 'noplaylist':'True', 'extract_flat':'in_playlist'}
 
     def search_songs(self, search: str, nb_results: int=5) -> List[SearchSong]:
         ytdl = YoutubeDL(self._opts)
@@ -20,16 +20,16 @@ class YoutubeDLSource:
             pass
 
         if videos is None:
-            videos = ytdl.extract_info(f"ytsearch{nb_results}:{search}", download=False)['entries']
+            videos = ytdl.extract_info(f"ytsearch{nb_results}:'{search}'", download=False)['entries']
 
         ret = []
         for vid in videos:
             ret.append(SearchSong(
-                id=vid["original_url"],
+                id=vid["url"],
                 track=vid["title"],
                 artist=vid["channel"],
-                duration=vid["duration"],
-                year=int(vid["upload_date"][0:4]),
+                duration=vid.get("duration"),
+                year=(int(vid["upload_date"][0:4]) if "upload_date" in vid else -1),
                 data={}
             ))
         return ret

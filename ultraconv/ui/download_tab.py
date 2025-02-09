@@ -135,7 +135,7 @@ class DownloadTab:
             for i in data:
                 self.provider_results[i.id] = i
                 duration = ""
-                if i.duration > 0:
+                if i.duration is not None and i.duration > 0:
                     m, s = divmod(i.duration, 60)
                     duration = f"{m}:{s} min"
                 year = ""
