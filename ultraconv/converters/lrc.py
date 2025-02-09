@@ -100,7 +100,7 @@ class LrcConverter:
                             next_sec = start_sec + 3
                         duration_sec = (next_sec-start_sec)*self.word_length_pct # use only 80% of the timeframe as we also need "blank" space between words
                     else:
-                        if self.ignore_words:
+                        if is_word_by_word:
                             word = txt[j][1]
                         else:
                             word = txt[j]
