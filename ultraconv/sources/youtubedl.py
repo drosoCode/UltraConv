@@ -4,10 +4,12 @@ from typing import List
 from urllib.parse import urlparse
 import os
 
+from ultraconv.processors.downloader import get_ffmpeg_path
+
 class YoutubeDLSource:
     # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extracting-information
     def __init__(self):
-        self._opts = {'format': 'bestaudio+bestvideo', 'noplaylist':'True', 'extract_flat':'in_playlist'}
+        self._opts = {'format': 'bestaudio+bestvideo', 'noplaylist':'True', 'extract_flat':'in_playlist', 'ffmpeg_location': get_ffmpeg_path()}
 
     def search_songs(self, search: str, nb_results: int=5) -> List[SearchSong]:
         ytdl = YoutubeDL(self._opts)
