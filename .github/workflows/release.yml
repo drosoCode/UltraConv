@@ -19,6 +19,8 @@ jobs:
 
     - name: Build app
       run: |
+        python -m venv .venv
+        .venv\Scripts\Activate.ps1
         pip install -r requirements.txt
         pip install pyinstaller
         Invoke-WebRequest "https://github.com/yt-dlp/FFmpeg-Builds/releases/download/latest/ffmpeg-master-latest-win64-gpl.zip" -OutFile ffmpeg.zip
