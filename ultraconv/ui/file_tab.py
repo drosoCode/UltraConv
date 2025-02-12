@@ -49,3 +49,6 @@ class FileTab:
 
     def _save_file(self):
         UserData.ultrastar_file.write()
+        UserData.set_message("File saved successfully !")
+        UserData.set_progress_bar(1)
+
