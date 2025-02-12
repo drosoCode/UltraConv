@@ -45,4 +45,7 @@ class MusixMatchSource:
         if self._mx.enhanced:
             if lrc and lrc.synced:
                 return lrc.to_str(syncedlyrics.TargetType.PREFER_SYNCED).split("\n")
-        return self._mx.get_lrc_by_id(song.id).to_str(syncedlyrics.TargetType.PREFER_SYNCED).split("\n")
+        lrc = self._mx.get_lrc_by_id(song.id)
+        if lrc:
+            return lrc.to_str(syncedlyrics.TargetType.PREFER_SYNCED).split("\n")
+        return None

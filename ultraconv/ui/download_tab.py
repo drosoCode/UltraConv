@@ -162,6 +162,11 @@ class DownloadTab:
         UserData.set_progress_bar(-1)
 
         def lyrics_cb(lyrics):
+            if lyrics is None:
+                UserData.set_message("Error: Lyrics download failed")
+                UserData.set_progress_bar(1)
+                return
+
             # save lyrics to file
             if "selected" in self.save_file_checkbox.state():
                 with open(os.path.join(UserData.ultrastar_dir(), "lyrics.txt"), "w+", encoding="utf8") as f:
@@ -212,6 +217,11 @@ class DownloadTab:
                     UserData.start_task(end_cb, ffmpeg_convert, path, vid)
                 else:
                     end_cb()
+
+            if not os.path.exists(path):
+                UserData.set_message("Error: Video download failed")
+                UserData.set_progress_bar(1)
+                return
 
             # convert audio
             if "selected" in self.convert_audio_checkbox.state():
