@@ -12,7 +12,7 @@ class UltrastarFile:
         pass
 
     def get_file_data(self):
-        if "MP3" not in self.tags:
+        if "MP3" not in self.tags or self.tags["MP3"] is None:
             self.tags["MP3"] = self.tags.get("AUDIO")
         
         lines = []
@@ -39,6 +39,7 @@ class UltrastarFile:
     def read(self, path: str):
         self.file_path = path
         self.events = []
+        self.tags = {}
         with open(path, "r", encoding="utf8") as f:
             data = f.readlines()
         
