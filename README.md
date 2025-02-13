@@ -23,3 +23,6 @@ Prerequisites:
 You can then directly run the program with `python main.py`
 
 To make a single file executable, use pyinstaller (`pip install pyinstaller`): `pyinstaller --onefile main.py --name ultraconv --collect-all sv_ttk --collect-all demucs --collect-all numpy --add-binary .\.venv\Lib\site-packages\ultrastar_pitch\binaries\pitchnet_2020_12_14.onnx:. --add-binary .\ffmpeg-master-latest-win64-gpl\bin\ffmpeg.exe:.`
+
+## Screenshots
+
