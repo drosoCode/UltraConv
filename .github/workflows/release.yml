@@ -4,7 +4,7 @@ on:
   workflow_dispatch:
   push:
     tags:
-      - "v*.*.*"
+      - "v\\d+\\.\\d+\\.\\d+"
 
 jobs:
   build:
@@ -31,10 +31,10 @@ jobs:
         Copy-Item .\ffmpeg-master-latest-win64-gpl\LICENSE.txt .\dist\
         Compress-Archive -Path .\dist\ -DestinationPath ultraconv.zip
 
-    - uses: actions/upload-artifact@v4
-      with:
-        name: ultraconv
-        path: ultraconv.zip
+    #- uses: actions/upload-artifact@v4
+    #  with:
+    #    name: ultraconv
+    #    path: ultraconv.zip
   
     - name: Release
       uses: softprops/action-gh-release@v2
