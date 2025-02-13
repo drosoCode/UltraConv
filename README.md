@@ -26,3 +26,11 @@ To make a single file executable, use pyinstaller (`pip install pyinstaller`): `
 
 ## Screenshots
 
+#### File loading/saving tab (with preview)
+![](.github/images/file.png)
+
+#### Download Lyrics/Videos tab
+![](.github/images/download.png)
+
+#### Conversion Tools tab
+![](.github/images/tools.png)
