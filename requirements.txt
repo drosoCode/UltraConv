@@ -3,5 +3,7 @@ syncedlyrics
 requests
 yt-dlp
 ultrastar-pitch
-https://github.com/cgohlke/pyicu-build/releases/download/v2.14/PyICU-2.14-cp313-cp313-win_amd64.whl
+#https://github.com/cgohlke/pyicu-build/releases/download/v2.14/PyICU-2.14-cp313-cp313-win_amd64.whl
+https://github.com/cgohlke/pyicu-build/releases/download/v2.11/PyICU-2.11-cp39-cp39-win_amd64.whl
 sv_ttk
+lingua-language-detector
