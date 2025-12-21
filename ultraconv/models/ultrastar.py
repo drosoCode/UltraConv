@@ -1,6 +1,9 @@
 from ultraconv.models import UltrastarEvent, UltrastarNote, UltrastarBreak, UltrastarText
 
 from typing import List
+from math import floor
+
+NUMERIC_TAGS = ("BPM", "GAP")
 
 class UltrastarFile:
     events: List[UltrastarEvent] = []
@@ -17,6 +20,8 @@ class UltrastarFile:
         
         lines = []
         for t,v in self.tags.items():
+            if t in NUMERIC_TAGS:
+                v = int(v)
             lines.append(f"#{t}:{v}")
 
         for i in self.events:
@@ -52,7 +57,7 @@ class UltrastarFile:
             if l[0] == "#":
                 s = l[1:].split(":")
                 value = s[1].strip("\n")
-                if s[0] in ("BPM", "GAP"):
+                if s[0] in NUMERIC_TAGS:
                     value = float(value)
                 self.tags[s[0]] = value
             
@@ -82,3 +87,9 @@ class UltrastarFile:
             self.tags["AUDIO"] = self.tags.get("MP3")
         if "MP3" not in self.tags:
             self.tags["MP3"] = self.tags.get("AUDIO")
+
+    def to_sec(self, val):
+        return round(val / (self.tags["BPM"] * 4) * 60, 3)
+
+    def to_beat(self, val):
+        return floor(val / 60 * self.tags["BPM"] * 4)
