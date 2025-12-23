@@ -12,6 +12,7 @@ class PitcherProcessor:
 
     def run(self, data: UltrastarFile) -> UltrastarFile:
         if data.tags.get("VOCALS") is None:
+            print("Error: No vocals file found in tags")
             return None
         
         # set mp3 to vocals file
