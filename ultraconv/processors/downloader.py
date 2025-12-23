@@ -7,7 +7,14 @@ def get_ffmpeg_path():
     if getattr(sys, "frozen", False):
         return os.path.join(sys._MEIPASS, "ffmpeg.exe")
     else:
+        # Find ffmpeg.exe in PATH
+        ffmpeg_name = "ffmpeg.exe" if os.name == "nt" else "ffmpeg"
+        for path_dir in os.environ.get("PATH", "").split(os.pathsep):
+            candidate = os.path.join(path_dir, ffmpeg_name)
+            if os.path.isfile(candidate) and os.access(candidate, os.X_OK):
+                return candidate
         return "ffmpeg"
+
 
 def download_file(url: str, out_file: str):
     with requests.get(url, stream=True) as r:
