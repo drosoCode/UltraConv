@@ -42,10 +42,16 @@ class MusixMatchSource:
     def download_lyrics(self, song: SearchSong) -> List[str]:
         self._mx = syncedlyrics.Musixmatch(enhanced=True)
         lrc = self._mx.get_lrc_word_by_word(song.id)
+        print(lrc)
         if self._mx.enhanced:
             if lrc and lrc.synced:
                 return lrc.to_str(syncedlyrics.TargetType.PREFER_SYNCED).split("\n")
         lrc = self._mx.get_lrc_by_id(song.id)
+        print(lrc)
         if lrc:
             return lrc.to_str(syncedlyrics.TargetType.PREFER_SYNCED).split("\n")
         return None
+
+# https://github.com/spicetify/cli/blob/main/CustomApps/lyrics-plus/ProviderMusixmatch.js
+# https://github.com/akashrchandran/syrics
+# https://lrclib.net/docs
