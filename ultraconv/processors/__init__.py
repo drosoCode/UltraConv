@@ -1,4 +1,10 @@
 from ultraconv.processors.downloader import download_file, ffmpeg_convert
 from ultraconv.processors.pitcher import PitcherProcessor
-from ultraconv.processors.splitter import SplitterProcessor
-from ultraconv.processors.transliterator import TransliteratorProcessor
+from ultraconv.processors.splitter_htdemucs import SplitterProcessor
+
+from ultraconv.processors.transliterator_unidecode import TransliteratorUnidecode
+from ultraconv.processors.transliterator_pyicu import TransliteratorICU
+from ultraconv.processors.transliterator_kakasi import TransliteratorKakasi
+from ultraconv.processors.transliterator_hangul import TransliteratorHangul
+
+PROCESSORS = [TransliteratorICU, TransliteratorUnidecode, TransliteratorKakasi, TransliteratorHangul]
