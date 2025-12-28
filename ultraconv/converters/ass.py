@@ -22,8 +22,13 @@ class AssConverter:
     
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
+    
+    def _get_lyrics(self, path: str) -> List[str]:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.readlines()
 
-    def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
+    def convert(self, lyrics_file_path: str, ultrastar_file=UltrastarFile()) -> UltrastarFile:
+        lyrics = self._get_lyrics(lyrics_file_path)
         ultrastar_file.tags["BPM"] = self.bpm
         ret = []
         is_gap_set = False
