@@ -93,3 +93,8 @@ class UltrastarFile:
 
     def to_beat(self, val):
         return floor(val / 60 * self.tags["BPM"] * 4)
+
+    def check_fields(self, required_fields: List[str]) -> bool:
+        for f in required_fields:
+            if f not in self.tags or self.tags[f] is None or self.tags[f] == "":
+                raise ValueError(f"Missing required tag: {f}")

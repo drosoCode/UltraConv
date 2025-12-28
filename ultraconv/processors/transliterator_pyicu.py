@@ -45,7 +45,7 @@ class TransliteratorICU(AbstractProcessor):
         lst.sort()
 
         return Schema({
-            Required('language'): In(lst)
+            Required('language', default='Any-Latin'): In(lst)
         })
 
 # https://gist.github.com/dpk/8325992#pyicu-cheat-sheet
