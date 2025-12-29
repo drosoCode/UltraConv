@@ -5,7 +5,7 @@ from datetime import datetime
 import json
 from typing import List
 
-from models import SearchSong
+from ultraconv.models import SearchSong
 
 class MusixMatchSource:
 
