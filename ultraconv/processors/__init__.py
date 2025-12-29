@@ -1,4 +1,4 @@
-from ultraconv.processors.utils import download_file, ffmpeg_convert
+from ultraconv.processors.utils import *
 
 from ultraconv.processors.aligner_algo import AlignerSimpleAlgo
 
@@ -12,3 +12,10 @@ from ultraconv.processors.transliterator_kakasi import TransliteratorKakasi
 from ultraconv.processors.transliterator_hangul import TransliteratorHangul
 
 PROCESSORS = [AlignerSimpleAlgo, PitcherUltrastarPitch, SplitterDemucs, TransliteratorICU, TransliteratorUnidecode, TransliteratorKakasi, TransliteratorHangul]
+
+def get_available_processors():
+    lst = []
+    for processor in PROCESSORS:
+        if processor.is_available():
+            lst.append(processor)
+    return lst

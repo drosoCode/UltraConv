@@ -1,7 +1,9 @@
+import shutil
 from ultraconv.models import UltrastarEvent, UltrastarNote, UltrastarBreak, UltrastarText
 
 from typing import List
 from math import floor
+import os
 
 NUMERIC_TAGS = ("BPM", "GAP")
 
@@ -10,6 +12,7 @@ class UltrastarFile:
     tags = {}
 
     file_path: str = ""
+    tmp_path: str = ""
 
     def __init__(self):
         pass
@@ -98,3 +101,18 @@ class UltrastarFile:
         for f in required_fields:
             if f not in self.tags or self.tags[f] is None or self.tags[f] == "":
                 raise ValueError(f"Missing required tag: {f}")
+
+    def get_dir(self):
+        return os.path.dirname(self.file_path)
+
+    def get_tmp_dir(self, clear: bool = False):
+        if self.tmp_path != "":
+            if clear:
+                shutil.rmtree(self.tmp_path)
+            else:
+                return self.tmp_path
+        
+        tmp_path = os.path.join(os.path.dirname(self.file_path), "tmp")
+        os.makedirs(tmp_path, exist_ok=True)
+        self.tmp_path = tmp_path
+        return tmp_path
