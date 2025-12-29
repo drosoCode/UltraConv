@@ -93,7 +93,7 @@ class KarafunSource(AbstractSource):
     def get_info(self) -> SourceInfo:
         return SourceInfo(
             name="Karafun",
-            description="Download from your Karafun account (login required, only for private use).",
+            description="Download from your Karafun account (paid account required, only for private use).",
             supported_types=[
                 SourceType.LYRICS,
                 SourceType.AUDIO,
