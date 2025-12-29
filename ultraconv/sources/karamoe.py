@@ -76,6 +76,7 @@ class KaramoeSource(AbstractSource):
                 ffmpeg_convert(vid_path, os.path.join(uf.get_dir(), "audio.mp3"))
                 uf.tags["MP3"] = "audio.mp3"
                 uf.tags["AUDIO"] = "audio.mp3"
+        return uf
 
     def get_info(self) -> SourceInfo:
         return SourceInfo(

@@ -89,6 +89,7 @@ class KarafunSource(AbstractSource):
                     uf.tags["AUDIO"] = "audio.mp3"
                 else:
                     print("No audio found.")
+        return uf
     
     def get_info(self) -> SourceInfo:
         return SourceInfo(
