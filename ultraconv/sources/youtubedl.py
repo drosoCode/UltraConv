@@ -4,7 +4,7 @@ from typing import List
 from urllib.parse import urlparse
 import os
 
-from ultraconv.processors.downloader import get_ffmpeg_path
+from ultraconv.processors.utils import get_ffmpeg_path
 
 class YoutubeDLSource:
     # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extracting-information
