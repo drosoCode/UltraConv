@@ -16,8 +16,8 @@ def get_ffmpeg_path():
         return "ffmpeg"
 
 
-def download_file(url: str, out_file: str):
-    with requests.get(url, stream=True) as r:
+def download_file(url: str, out_file: str, req_client=requests):
+    with req_client.get(url, stream=True) as r:
         r.raise_for_status()
         with open(out_file, 'wb') as f:
             for chunk in r.iter_content(chunk_size=8192): 
