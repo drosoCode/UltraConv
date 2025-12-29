@@ -4,8 +4,168 @@ import requests
 import json
 import hashlib
 import time
+import voluptuous
 
-from ultraconv.processors.utils import download_file, ffmpeg_convert
+from ultraconv.processors import download_file, ffmpeg_convert, ffmpeg_merge_convert
+from ultraconv.models import AbstractSource, SearchSong, SourceInfo, SourceType, UltrastarFile
+from ultraconv.converters import AssConverter
+
+class KarafunSource(AbstractSource):
+    client = None
+    
+    def __init__(self, config):
+        super().__init__(config)
+        if KarafunSource.client is None:
+            KarafunSource.client = KarafunAPI()
+            KarafunSource.client.login(config['email'], config['password'])
+
+    def search(self, query: str, nb_results=-1) -> list[SearchSong]:
+        results = KarafunSource.client.search_song(query)
+        songs = []
+        for res in results:
+            songs.append(SearchSong(
+                id=res['id'],
+                title=res['title'],
+                artist=res['artist'],
+                year=res['year'],
+                duration=round(int(res['duration'])/60, 2),
+                data={}
+            ))
+        return songs
+
+    def download(self, item: SearchSong, types: list[SourceType], uf: UltrastarFile) -> UltrastarFile:
+        tmp_dir = uf.get_tmp_dir()
+        KarafunSource.client.download_kit(item.id, tmp_dir)
+
+        for t in types:
+            if t == SourceType.LYRICS:
+                xml_path = os.path.join(tmp_dir, "output.xml")
+                ass_path = os.path.join(tmp_dir, "output.ass")
+                if os.path.exists(xml_path):
+                    self.xml_to_ass(xml_path, ass_path)
+                    uf = AssConverter(bpm=400).convert(ass_path, uf)
+                else:
+                    print("No lyrics found.")
+            
+            elif t == SourceType.METADATA:
+                uf.tags["TITLE"] = item.track
+                uf.tags["ARTIST"] = item.artist
+                uf.tags["YEAR"] = item.year
+
+            elif t == SourceType.VOICE_AUDIO:
+                main_path = os.path.join(tmp_dir, "ld.ogg")
+                if os.path.exists(main_path):
+                    audio_path = os.path.join(uf.get_dir(), "vocals.mp3")
+                    ffmpeg_convert(main_path, audio_path)
+                    uf.tags["VOCALS"] = "vocals.mp3"
+                else:
+                    print("No voice audio found.")
+            
+            elif t == SourceType.INSTRUMENTAL_AUDIO:
+                paths = []
+                for p in ["ins.ogg", "bv.ogg"]:
+                    x = os.path.join(tmp_dir, p)
+                    if os.path.exists(x):
+                        paths.append(x)
+                
+                if len(paths) > 0:
+                    audio_path = os.path.join(uf.get_dir(), "inst.mp3")
+                    ffmpeg_merge_convert(paths, audio_path)
+                    uf.tags["INSTRUMENTAL"] = "inst.mp3"
+                else:
+                    print("No instrumental audio found.")
+            
+            elif t == SourceType.AUDIO:
+                paths = []
+                for p in ["ins.ogg", "bv.ogg", "ld.ogg"]:
+                    x = os.path.join(tmp_dir, p)
+                    if os.path.exists(x):
+                        paths.append(x)
+                
+                if len(paths) > 0:
+                    audio_path = os.path.join(uf.get_dir(), "audio.mp3")
+                    ffmpeg_merge_convert(paths, audio_path)
+                    uf.tags["MP3"] = "audio.mp3"
+                    uf.tags["AUDIO"] = "audio.mp3"
+                else:
+                    print("No audio found.")
+    
+    def get_info(self) -> SourceInfo:
+        return SourceInfo(
+            name="Karafun",
+            description="Download from your Karafun account (login required, only for private use).",
+            supported_types=[
+                SourceType.LYRICS,
+                SourceType.AUDIO,
+                SourceType.INSTRUMENTAL_AUDIO,
+                SourceType.VOICE_AUDIO,
+                SourceType.METADATA,
+            ]
+        )
+    
+    @staticmethod
+    def is_available():
+        return True
+    
+    @staticmethod
+    def get_options():
+        return voluptuous.Schema({
+            voluptuous.Required("email"): str,
+            voluptuous.Required("password"): str,
+        })
+    
+    def xml_to_ass(self, xml_path, ass_path):
+        def parse_time(time_str):
+            # parse kit formatted time: 00:00:19,230
+            parts = time_str.split(':')
+            hours = int(parts[0])
+            minutes = int(parts[1])
+            seconds, milliseconds = map(int, parts[2].split(','))
+            total_milliseconds = (hours * 3600 + minutes * 60 + seconds) * 1000 + milliseconds
+            return total_milliseconds
+
+        def format_time(milliseconds):
+            # return time in ass format: H:MM:SS.CS (centiseconds)
+            total_seconds = milliseconds // 1000
+            ms = milliseconds % 1000
+            hours = total_seconds // 3600
+            minutes = (total_seconds % 3600) // 60
+            seconds = total_seconds % 60
+            centiseconds = ms // 10
+            return f"{hours}:{minutes:02}:{seconds:02}.{centiseconds:02}"
+
+        def format_duration(milliseconds):
+            return "{\\k"+str(milliseconds//10)+"}"
+        
+        root = ET.parse(xml_path)
+        ass_lines = [
+            "[Events]",
+            "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
+        ]
+        # get the id of the first line
+        kfn_track_id = root.find("./karaoke/kfntracks/kfntrack").get("id")
+
+        for page in root.findall("./karaoke/page"):
+            if page.get("kfntrackid") == kfn_track_id:
+                for line in page.findall("./line"):
+                    line_data = []
+                    start = 0
+                    end = 0
+                    for word in line.findall(".//syllabe"):
+                        s = parse_time(word.find("start").text)
+                        if start == 0:
+                            start = s
+                        end = parse_time(word.find("end").text)
+                        txt = word.find("text").text
+                        line_data.append(format_duration(end - s)+txt)
+
+                    if line_data != []:
+                        # Dialogue: 0,0:00:28.65,0:00:30.66,Default,,0,0,0,karaoke,
+                        ass_lines.append("Dialogue: 0," + format_time(start) + "," + format_time(end) + ",Default,,0,0,0,karaoke," + " ".join(line_data))
+
+        with open(ass_path, "w", encoding="utf-8") as f:
+            f.write("\n".join(ass_lines))
+
 
 class KarafunAPI:
 
