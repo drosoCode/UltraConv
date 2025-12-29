@@ -36,7 +36,7 @@ class AssConverter:
         prev_end = 0
         for i in lyrics:
             # iterate over lines of text
-            if len(i) > 9 and i[0:9] == "Comment: ":
+            if len(i) > 10 and i[0:10] == "Dialogue: ":
                 s = i.split(",")
                 start = self._parse_time(s[1])
                 txt = self.FLAG_REG.findall(s[9])
