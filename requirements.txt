@@ -9,7 +9,6 @@ ultrastar-pitch
 # =============== Downloading ===============
 requests
 yt-dlp
-syncedlyrics
 
 # ============ Audio Separation =============
 demucs
