@@ -1,4 +1,4 @@
-from ultraconv.models.ultrastar import UltrastarFile, UltrastarText, AbstractProcessor, ProcessorType, ProcessorInfo
+from ultraconv.models import UltrastarFile, UltrastarText, AbstractProcessor, ProcessorType, ProcessorInfo
 
 try:
     import cutlet

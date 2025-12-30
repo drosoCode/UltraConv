@@ -10,8 +10,9 @@ from ultraconv.processors.transliterator_unidecode import TransliteratorUnidecod
 from ultraconv.processors.transliterator_pyicu import TransliteratorICU
 from ultraconv.processors.transliterator_kakasi import TransliteratorKakasi
 from ultraconv.processors.transliterator_hangul import TransliteratorHangul
+from ultraconv.processors.transliterator_cutlet import TransliteratorCutlet
 
-PROCESSORS = [AlignerSimpleAlgo, PitcherUltrastarPitch, SplitterDemucs, TransliteratorICU, TransliteratorUnidecode, TransliteratorKakasi, TransliteratorHangul]
+PROCESSORS = [AlignerSimpleAlgo, PitcherUltrastarPitch, SplitterDemucs, TransliteratorICU, TransliteratorUnidecode, TransliteratorKakasi, TransliteratorCutlet, TransliteratorHangul]
 
 def get_available_processors():
     lst = []
