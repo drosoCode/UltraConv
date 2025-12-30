@@ -93,6 +93,7 @@ class LrcConverter:
                         # set arbitrary values since the word timing is not available; it should then be re-aligned using a LYRICS_ALIGNER processor
                         start_sec = start
                         duration_sec = 0.1
+                        word = txt[j]
 
                     # StartBeat, Length, Pitch, Text
                     ret.append(UltrastarText(time=self._sec_to_bpm(start_sec), length=self._sec_to_bpm(duration_sec), pitch=0, start_space=True, text=word))
