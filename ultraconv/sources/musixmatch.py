@@ -1,21 +1,27 @@
 import requests
 import uuid
 import random
-from datetime import datetime
+from datetime import datetime, timedelta
 import json
 from typing import List
+import voluptuous
+import os
+import xml.etree.ElementTree as ET
 
-from ultraconv.models import SearchSong
+from ultraconv.models import SearchSong, AbstractSource, SourceInfo, SourceType, UltrastarFile
+from ultraconv.converters import LrcConverter, AssConverter
 
-class MusixMatchSource:
+class MusixMatchSource(AbstractSource):
+    client = None
 
-    def __init__(self, email: str, password: str):
+    def __init__(self, config: dict):
+        super().__init__(config)
         if MusixMatchSource.client is None:
-            MusixMatchSource.client = MusixmatchAPI(email=email, password=password)
+            MusixMatchSource.client = MusixmatchAPI(email=config["email"], password=config["password"])
             #MusixMatchSource.languages = MusixMatchSource.client.get_languages()
         self.mx = MusixMatchSource.client
 
-    def search_songs(self, search_term: str, nb_results=-1) -> List[SearchSong]:
+    def search(self, search_term: str, nb_results=-1) -> List[SearchSong]:
         resp = self.mx.search_tracks(search_term)
         
         ret = []
@@ -30,15 +36,75 @@ class MusixMatchSource:
             ))
         return ret
 
-    def download_lyrics(self, song: SearchSong) -> List[str]:
-        resp = self.mx.get_lyrics(song.id)
-        if resp["richsync_lyrics"]:
-            ass = resp["richsync_lyrics"]
-        else:
-            lrc = resp["xml_lyrics"]
+    def download(self, song: SearchSong, types: list[SourceType], uf: UltrastarFile) -> UltrastarFile:
+        tmp_dir = uf.get_tmp_dir()
 
+        for t in types:
+            if t == SourceType.LYRICS:
+                resp = self.mx.get_lyrics(song.id)
+                
+                if resp["richsync_lyrics"]:
+                    ass_path = os.path.join(tmp_dir, "lyrics.ass")
+                    self.richsync_to_ass(resp["richsync_lyrics"], ass_path)
+                    uf = AssConverter(bpm=400).convert(ass_path, uf)
+                else:
+                    lrc_path = os.path.join(tmp_dir, "lyrics.lrc")
+                    self.xml_to_lrc(resp["xml_lyrics"], lrc_path)
+                    uf = LrcConverter(bpm=400).convert(lrc_path, uf)
+            
+            elif t == SourceType.METADATA:
+                uf.tags['TITLE'] = song.track
+                uf.tags['ARTIST'] = song.artist
 
+    def get_info(self) -> SourceInfo:
+        return SourceInfo(
+            name="MusixMatch",
+            description="Download lyrics from MusixMatch (login required)",
+            supported_types=[
+                SourceType.LYRICS,
+                SourceType.METADATA,
+            ]
+        )
 
+    @staticmethod
+    def is_available():
+        return True
+
+    @staticmethod
+    def get_options():
+        return voluptuous.Schema({
+            voluptuous.Required("email"): str,
+            voluptuous.Required("password"): str,
+        })
+
+    def richsync_to_lrc(self, json_data, lrc_path):
+        def format_time(time_in_seconds: float):
+            """Returns a [mm:ss.xx] formatted string from the given time in seconds."""
+            time = timedelta(seconds=time_in_seconds)
+            minutes, seconds = divmod(time.seconds, 60)
+            return f"{minutes:02}:{seconds:02}.{time.microseconds//10000:02}"
+
+        lrc_str = ""
+        for i in json_data:
+            lrc_str += f"[{format_time(i['ts'])}] "
+            for l in i["l"]:
+                t = format_time(float(i["ts"]) + float(l["o"]))
+                lrc_str += f"<{t}> {l['c']} "
+            lrc_str += "\n"
+
+        with open(lrc_path, "w", encoding="utf-8") as f:
+            f.write(lrc_str)
+
+    def xml_to_lrc(self, xml_data, lrc_path):
+        xml_data = xml_data.replace('xmlns="http://www.w3.org/ns/ttml"', '') # makes parser crash
+        root = ET.fromstring(xml_data)
+        lrc_str = ""
+        for line in root.findall("./body/div//p"):
+            begin = line.get("begin")[3:11]
+            lrc_str += f"[{begin}] {line.text}\n"
+        
+        with open(lrc_path, "w", encoding="utf-8") as f:
+            f.write(lrc_str)
 
 class MusixmatchAPI:
     APP_ID = "android-player-v1.0"
