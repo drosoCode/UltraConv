@@ -9,8 +9,8 @@ from typing import List
 # in the case of non well synced lyrics, use the ignore_words=True flag to ignore this data and use the syncing algorithm
 
 class LrcConverter:
-    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([\w'’,]+)")
-    LRC_LINE_REG = re.compile(r"([\w'’,]+) *")
+    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([\w'’,()]+)")
+    LRC_LINE_REG = re.compile(r"([\w'’,()]+) *")
     bpm = 0
     word_length_pct = 0.85 # lrc format only gives start time of words, so we can only use part of the timeframe for the actual word (so we keep some time for the space between words)
 

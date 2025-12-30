@@ -5,7 +5,7 @@ from math import floor
 from typing import List
 
 class AssConverter:
-    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([\w'’,]+)( ?)")
+    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([\w'’,()]+)( ?)")
     bpm = 250
 
     def __init__(self, bpm=250):
@@ -39,7 +39,7 @@ class AssConverter:
             if len(i) > 10 and i[0:10] == "Dialogue: ":
                 s = i.split(",")
                 start = self._parse_time(s[1])
-                txt = self.FLAG_REG.findall(s[9])
+                txt = self.FLAG_REG.findall("".join(s[9:]))
                 #example text: {\k21}PLAN{\k18}dae{\k12}ro {\k29}KEEP {\k29}GOING
 
                 # iterate over words to count letters, if empty skip the line
