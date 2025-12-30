@@ -12,7 +12,7 @@ from .data import UserData
 WIDTH = 960
 HEIGHT = 530
 
-def run():
+def run(source_config_path: str):
     root = tkinter.Tk()
     root.geometry(f"{WIDTH}x{HEIGHT}")
     root.title('UltraConv')
@@ -24,7 +24,7 @@ def run():
     file_frame = FileTab(notebook, WIDTH, HEIGHT).get_frame()
     file_frame.pack(fill='both', expand=True)
 
-    download_frame = DownloadTab(notebook, WIDTH, HEIGHT).get_frame()
+    download_frame = DownloadTab(notebook, WIDTH, HEIGHT, source_config_path).get_frame()
     download_frame.pack(fill='both', expand=True)
 
     tools_frame = ToolsTab(notebook, WIDTH, HEIGHT).get_frame()
