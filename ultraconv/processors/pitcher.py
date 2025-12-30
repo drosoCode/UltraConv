@@ -1,7 +1,7 @@
 from pathlib import Path
 import os
 
-from voluptuous import Schema, Required, Boolean
+from voluptuous import Schema, Required
 
 from ultraconv.models import UltrastarFile, AbstractProcessor, ProcessorType, ProcessorInfo
 
@@ -18,7 +18,7 @@ class PitcherUltrastarPitch(AbstractProcessor):
         self._postproc = config.get("postproc", True)
 
     def run(self, data: UltrastarFile) -> UltrastarFile:
-        self.check_fields("VOCALS", "MP3")
+        data.check_fields(["VOCALS", "MP3"])
         
         # set mp3 to vocals file
         p = Path(data.file_path)
@@ -60,5 +60,5 @@ class PitcherUltrastarPitch(AbstractProcessor):
     @staticmethod
     def get_options():
         return Schema({
-            Required("postproc", default=True): Boolean()
+            Required("postproc", default=True): bool
         })

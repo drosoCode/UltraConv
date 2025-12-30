@@ -30,7 +30,7 @@ class SplitterDemucs(AbstractProcessor):
         self._shifts = config.get("shifts", 1)
         
     def run(self, data: UltrastarFile) -> UltrastarFile:
-        self.check_fields("AUDIO")
+        data.check_fields(["AUDIO"])
 
         p = Path(data.file_path)
         tmp = os.path.join(os.getcwd(), "tmp")
