@@ -78,7 +78,8 @@ class KaramoeSource(AbstractSource):
                 uf.tags["AUDIO"] = "audio.mp3"
         return uf
 
-    def get_info(self) -> SourceInfo:
+    @staticmethod
+    def get_info() -> SourceInfo:
         return SourceInfo(
             name="Karamoe",
             description="Download from karaoke mugen api",

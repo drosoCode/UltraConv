@@ -24,18 +24,20 @@ class KarafunSource(AbstractSource):
         songs = []
         for res in results:
             songs.append(SearchSong(
-                id=res['id'],
-                title=res['title'],
+                id=str(res['id']),
+                track=res['title'],
                 artist=res['artist'],
-                year=res['year'],
-                duration=round(int(res['duration'])/60, 2),
+                year=int(res['year']),
+                duration=int(res['duration']),
                 data={}
             ))
         return songs
 
     def download(self, item: SearchSong, types: list[SourceType], uf: UltrastarFile) -> UltrastarFile:
-        tmp_dir = uf.get_tmp_dir()
-        KarafunSource.client.download_kit(item.id, tmp_dir)
+        tmp_dir = uf.get_tmp_dir(clear=True)
+        kit_file = os.path.join(tmp_dir, "karafun.kit")
+        KarafunSource.client.download_kit(item.id, kit_file)
+        KarafunSource.client.extract_kit(kit_file, tmp_dir)
 
         for t in types:
             if t == SourceType.LYRICS:
@@ -91,7 +93,8 @@ class KarafunSource(AbstractSource):
                     print("No audio found.")
         return uf
     
-    def get_info(self) -> SourceInfo:
+    @staticmethod
+    def get_info() -> SourceInfo:
         return SourceInfo(
             name="Karafun",
             description="Download from your Karafun account (paid account required, only for private use).",
@@ -143,8 +146,12 @@ class KarafunSource(AbstractSource):
             "[Events]",
             "Format: Layer, Start, End, Style, Name, MarginL, MarginR, MarginV, Effect, Text"
         ]
+
         # get the id of the first line
-        kfn_track_id = root.find("./karaoke/kfntracks/kfntrack").get("id")
+        try:
+            kfn_track_id = root.find("./karaoke/kfntracks/kfntrack").get("id")
+        except Exception:
+            kfn_track_id = root.find("./karaoke/page").get("kfntrackid")
 
         for page in root.findall("./karaoke/page"):
             if page.get("kfntrackid") == kfn_track_id:

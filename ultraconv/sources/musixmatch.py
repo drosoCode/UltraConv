@@ -9,7 +9,7 @@ import os
 import xml.etree.ElementTree as ET
 
 from ultraconv.models import SearchSong, AbstractSource, SourceInfo, SourceType, UltrastarFile
-from ultraconv.converters import LrcConverter, AssConverter
+from ultraconv.converters import LrcConverter
 
 class MusixMatchSource(AbstractSource):
     client = None
@@ -30,7 +30,7 @@ class MusixMatchSource(AbstractSource):
                 id=track["commontrack_vanity_id"],
                 track=track["track_name"],
                 artist=track["artist_name"],
-                duration=round(track.get("track_length", 1)/60, 2),
+                duration=track.get("track_length", 1),
                 year=-1,
                 data={}
             ))
@@ -44,9 +44,9 @@ class MusixMatchSource(AbstractSource):
                 resp = self.mx.get_lyrics(song.id)
                 
                 if resp["richsync_lyrics"]:
-                    ass_path = os.path.join(tmp_dir, "lyrics.ass")
-                    self.richsync_to_ass(resp["richsync_lyrics"], ass_path)
-                    uf = AssConverter(bpm=400).convert(ass_path, uf)
+                    lrc_path = os.path.join(tmp_dir, "lyrics.lrc")
+                    self.richsync_to_lrc(json.loads(resp["richsync_lyrics"]), lrc_path)
+                    uf = LrcConverter(bpm=400).convert(lrc_path, uf)
                 else:
                     lrc_path = os.path.join(tmp_dir, "lyrics.lrc")
                     self.xml_to_lrc(resp["xml_lyrics"], lrc_path)
@@ -56,7 +56,8 @@ class MusixMatchSource(AbstractSource):
                 uf.tags['TITLE'] = song.track
                 uf.tags['ARTIST'] = song.artist
 
-    def get_info(self) -> SourceInfo:
+    @staticmethod
+    def get_info() -> SourceInfo:
         return SourceInfo(
             name="MusixMatch",
             description="Download lyrics from MusixMatch (login required)",
@@ -199,7 +200,6 @@ class MusixmatchAPI:
         if search_req.status_code != 200:
             raise Exception(f"Error: Received status code {search_req.status_code}: {search_req.text}")
         
-        print(search_req.json())
         return search_req.json()["data"]["tracks"]
 
     def get_lyrics(self, track_id):

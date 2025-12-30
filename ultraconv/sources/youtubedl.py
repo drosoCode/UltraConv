@@ -49,15 +49,16 @@ class YoutubeDLSource(AbstractSource):
 
         for t in types:
             if t == SourceType.VIDEO:
-                ffmpeg_convert(vid_path, os.path.join(tmp_dir, "video.mp4"))
+                ffmpeg_convert(vid_path, os.path.join(uf.get_dir(), "video.mp4"))
                 uf.tags["VIDEO"] = "video.mp4"
             elif t == SourceType.AUDIO:
-                audio_path = os.path.join(tmp_dir, "audio.mp3")
+                audio_path = os.path.join(uf.get_dir(), "audio.mp3")
                 ffmpeg_convert(vid_path, audio_path)
                 uf.tags["AUDIO"] = "audio.mp3"
                 uf.tags["MP3"] = "audio.mp3"
 
-    def get_info(self) -> SourceInfo:
+    @staticmethod
+    def get_info() -> SourceInfo:
         return SourceInfo(
             name="YoutubeDL",
             description="Download videos and audio from YouTube and other sites using yt-dlp",

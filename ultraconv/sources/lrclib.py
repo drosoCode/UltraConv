@@ -22,7 +22,7 @@ class LrcLibSource(AbstractSource):
                     id=track["id"],
                     track=track['trackName'],
                     artist=track['artistName'],
-                    duration=round(track.get('duration', 1)/60,2),
+                    duration=track.get('duration', 1),
                     year=-1,
                     data={}
                 ))
@@ -49,7 +49,8 @@ class LrcLibSource(AbstractSource):
                 uf.tags['TITLE'] = song.track
                 uf.tags['ARTIST'] = song.artist
 
-    def get_info(self) -> SourceInfo:
+    @staticmethod
+    def get_info() -> SourceInfo:
         return SourceInfo(
             name="LrcLib",
             description="Download lyrics from lrclib.net",
