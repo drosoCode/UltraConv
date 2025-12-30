@@ -1,6 +1,8 @@
 from tkinter import ttk, filedialog
 
-from ultraconv.processors import TransliteratorProcessor, SplitterProcessor, PitcherProcessor
+import voluptuous as vol
+
+from ultraconv.processors import get_available_processors
 from ultraconv.converters import LrcConverter, AssConverter
 from ultraconv.models import UltrastarFile
 from .data import UserData
@@ -12,93 +14,154 @@ class ToolsTab:
     def __init__(self, notebook, w, h):
         self.frame = ttk.Frame(notebook, width=w, height=h, padding=20)
 
+        self._processor_by_name = {}
+        self.processor_name = ""
+
+        for i in get_available_processors():
+            if self.processor_name == "":
+                self.processor_name = i.get_info().name
+            self._processor_by_name[i.get_info().name] = i
+
+        # Import Section
+
         self.import_lrc_button = ttk.Button(self.frame, text="Import LRC")
-        self.import_lrc_ignore_wbw_checkbox = ttk.Checkbutton(self.frame, text="Ignore Word Sync")
-        self.import_lrc_ignore_wbw_checkbox.invoke()
-        self.import_lrc_bpm_number_label = ttk.Label(self.frame, text="BPM")
-        self.import_lrc_bpm_number = ttk.Spinbox(self.frame, from_=0, to=1000)
-        self.import_lrc_bpm_number.set(400)
-        self.import_lrc_line_pct_label = ttk.Label(self.frame, text="Line percentage")
-        self.import_lrc_line_pct = ttk.Spinbox(self.frame, from_=0, to=1, increment=0.01)
-        self.import_lrc_line_pct.set(0.95)
-        self.import_lrc_word_pct_label = ttk.Label(self.frame, text="Word percentage")
-        self.import_lrc_word_pct = ttk.Spinbox(self.frame, from_=0, to=1, increment=0.01)
-        self.import_lrc_word_pct.set(0.8)
-        
         self.import_ass_button = ttk.Button(self.frame, text="Import ASS")
-        self.import_ass_bpm_number_label = ttk.Label(self.frame, text="BPM")
-        self.import_ass_bpm_number = ttk.Spinbox(self.frame, from_=0, to=1000)
-        self.import_ass_bpm_number.set(400)
-
-        self.transliterate_button = ttk.Button(self.frame, text="Transliterate")
-        self.transliterate_dropdown_label = ttk.Label(self.frame, text="From-To Writing")
-        langs = TransliteratorProcessor.get_languages()
-        self.transliterate_dropdown = ttk.Combobox(self.frame, values=langs)
-        if "Any-Latin" in langs:
-            self.transliterate_dropdown.set("Any-Latin")
+        self.import_bpm_number_label = ttk.Label(self.frame, text="BPM")
+        self.import_bpm_number = ttk.Spinbox(self.frame, from_=0, to=1000)
+        self.import_bpm_number.set(400)
         
-        self.split_voice_button = ttk.Button(self.frame, text="Split voice")
-        self.split_voice_dropdown_label = ttk.Label(self.frame, text="Model")
-        models = SplitterProcessor.get_models()
-        self.split_voice_dropdown = ttk.Combobox(self.frame, values=models)
-        if "htdemucs" in models:
-            self.split_voice_dropdown.set("htdemucs")
-        self.split_voice_jobs_number_label = ttk.Label(self.frame, text="Jobs")
-        self.split_voice_jobs_number = ttk.Spinbox(self.frame, from_=0, to=8)
-        self.split_voice_jobs_number.set(4)
-        self.split_voice_shifts_number_label = ttk.Label(self.frame, text="Shifts")
-        self.split_voice_shifts_number = ttk.Spinbox(self.frame, from_=0, to=8)
-        self.split_voice_shifts_number.set(1)
-
-        self.pitch_button = ttk.Button(self.frame, text="Pitch")
-        self.pitch_post_process_checkbox = ttk.Checkbutton(self.frame, text="Post-Process")
-        self.pitch_post_process_checkbox.invoke()
-        
-
         self.import_lrc_button.grid(row=0, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_ignore_wbw_checkbox.grid(row=0, column=1, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_bpm_number_label.grid(row=0, column=2, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_bpm_number.grid(row=0, column=3, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.import_ass_button.grid(row=0, column=1, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.import_bpm_number_label.grid(row=0, column=2, sticky="", padx=PAD_X, pady=PAD_Y)
+        self.import_bpm_number.grid(row=0, column=3, sticky="nsew", padx=PAD_X, pady=PAD_Y)
 
-        self.import_lrc_line_pct_label.grid(row=1, column=0, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_line_pct.grid(row=1, column=1, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_word_pct_label.grid(row=1, column=2, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.import_lrc_word_pct.grid(row=1, column=3, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        ttk.Separator(self.frame, orient='horizontal').grid(row=1, columnspan=8, sticky="ew", padx=PAD_X, pady=PAD_Y)
 
-        ttk.Separator(self.frame, orient='horizontal').grid(row=2, columnspan=8, sticky="ew", padx=PAD_X, pady=PAD_Y)
+        # Tool Selection Section
 
-        self.import_ass_button.grid(row=3, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.import_ass_bpm_number_label.grid(row=3, column=1, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.import_ass_bpm_number.grid(row=3, column=2, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.processor_dropdown_label = ttk.Label(self.frame, text="Processor")
+        self.processor_dropdown = ttk.Combobox(self.frame, values=list(self._processor_by_name.keys()))
+        self.processor_run_button = ttk.Button(self.frame, text="Run")
+        self.processor_desc_label = ttk.Label(self.frame, text=self._processor_by_name[self.processor_name].get_info().description)
+
+        self.processor_dropdown_label.grid(row=2, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.processor_dropdown.grid(row=2, column=1, columnspan=6, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.processor_dropdown.set(self.processor_name)
+        self.processor_run_button.grid(row=2, column=7, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.processor_desc_label.grid(row=3, column=0, columnspan=8, sticky="w", padx=PAD_X, pady=PAD_Y)
         
         ttk.Separator(self.frame, orient='horizontal').grid(row=4, columnspan=8, sticky="ew", padx=PAD_X, pady=PAD_Y)
 
-        self.transliterate_button.grid(row=5, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.transliterate_dropdown_label.grid(row=5, column=1, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.transliterate_dropdown.grid(row=5, column=2, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        # Config Section
 
-        ttk.Separator(self.frame, orient='horizontal').grid(row=6, columnspan=8, sticky="ew", padx=PAD_X, pady=PAD_Y)
-
-        self.split_voice_button.grid(row=7, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.split_voice_dropdown_label.grid(row=7, column=1, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.split_voice_dropdown.grid(row=7, column=2, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-
-        self.split_voice_jobs_number_label.grid(row=8, column=0, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.split_voice_jobs_number.grid(row=8, column=1, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.split_voice_shifts_number_label.grid(row=8, column=2, sticky="", padx=PAD_X, pady=PAD_Y)
-        self.split_voice_shifts_number.grid(row=8, column=3, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-
-        ttk.Separator(self.frame, orient='horizontal').grid(row=9, columnspan=8, sticky="ew", padx=PAD_X, pady=PAD_Y)
-
-        self.pitch_button.grid(row=10, column=0, sticky="nsew", padx=PAD_X, pady=PAD_Y)
-        self.pitch_post_process_checkbox.grid(row=10, column=1, sticky="nsew", padx=PAD_X, pady=PAD_Y)
+        self.config_start_row = 5
+        self.config_widgets = {}
 
         # bind event handlers
         self.import_lrc_button.bind("<Button-1>", lambda e: self._import_lrc())
         self.import_ass_button.bind("<Button-1>", lambda e: self._import_ass())
-        self.split_voice_button.bind("<Button-1>", lambda e: self._split_voice())
-        self.transliterate_button.bind("<Button-1>", lambda e: self._transliterate())
-        self.pitch_button.bind("<Button-1>", lambda e: self._pitch())
+        self.processor_run_button.bind("<Button-1>", lambda e: self._run_tool())
+        self.processor_dropdown.bind("<<ComboboxSelected>>", self._on_processor_changed)
+        
+        # initialize config options
+        self.update_config_options()
+
+    def _on_processor_changed(self, event):
+        """Handle processor dropdown selection change"""
+        self.processor_name = self.processor_dropdown.get()
+        self.processor_desc_label.config(text=self._processor_by_name[self.processor_name].get_info().description)
+        self.update_config_options()
+
+    def update_config_options(self):
+        """Dynamically create TTK widgets based on voluptuous schema"""
+        # clear old widgets
+        for widget_list in self.config_widgets.values():
+            if isinstance(widget_list, list):
+                for widget in widget_list:
+                    widget.destroy()
+            else:
+                widget_list.destroy()
+        self.config_widgets = {}
+        
+        # create new widgets based on schema
+        opts: vol.Schema = self._processor_by_name[self.processor_name].get_options()
+        i = 0
+        for k, v in opts.schema.items():
+            # Create label
+            label = ttk.Label(self.frame, text=str(k).replace('_', ' ').title())
+            label.grid(row=self.config_start_row + i, column=0, sticky="w", padx=PAD_X, pady=PAD_Y)
+            
+            # Create widget based on validator type
+            default_value = None
+            try:
+                default_value = k.default()
+            except Exception:
+                pass
+            widget = self._create_widget_for_validator(v, default_value)
+            widget.grid(row=self.config_start_row + i, column=1, sticky="ew", padx=PAD_X, pady=PAD_Y)
+            
+            self.config_widgets[k] = [label, widget]
+            i += 1
+    
+    def _create_widget_for_validator(self, validator, default_value):
+        """Create appropriate TTK widget based on voluptuous validator"""
+        # Handle different validator types
+        if validator == bool:
+            widget = ttk.Checkbutton(self.frame)
+            if default_value is not None:
+                if default_value:
+                    widget.invoke()
+            return widget
+            
+        elif isinstance(validator, vol.In):
+            # Handle vol.In([list of choices])
+            choices = list(validator.container)
+            widget = ttk.Combobox(self.frame, values=choices, state="readonly")
+            if default_value is not None and default_value in choices:
+                widget.set(default_value)
+            elif choices:
+                widget.set(choices[0])
+            return widget
+            
+        elif isinstance(validator, vol.Range):
+            # Handle vol.Range(min, max)
+            widget = ttk.Spinbox(self.frame, from_=validator.min, to=validator.max, width=10)
+            if default_value is not None:
+                widget.set(str(default_value))
+            else:
+                widget.set(str(validator.min))
+            return widget
+            
+        else:
+            # Default to Entry for strings and unknown types
+            widget = ttk.Entry(self.frame)
+            if default_value is not None:
+                widget.insert(0, str(default_value))
+            return widget
+    
+    def get_config_values(self):
+        """Extract values from config widgets"""
+        config = {}
+        for key, widget_list in self.config_widgets.items():
+            widget = widget_list[1]  # widget_list[0] is label, [1] is the input widget
+            
+            if isinstance(widget, ttk.Checkbutton):
+                config[key] = 'selected' in widget.state()
+            elif isinstance(widget, (ttk.Spinbox, ttk.Entry)):
+                try:
+                    value = widget.get()
+                    # Try to convert to appropriate type
+                    if value.replace('.', '').replace('-', '').isdigit():
+                        config[key] = float(value) if '.' in value else int(value)
+                    else:
+                        config[key] = value
+                except:
+                    config[key] = widget.get()
+            elif isinstance(widget, ttk.Combobox):
+                config[key] = widget.get()
+
+        return config
+        
 
     def get_frame(self):
         return self.frame
@@ -113,17 +176,8 @@ class ToolsTab:
             UserData.set_message("Error: No file selected")
             return
         
-        cvt = LrcConverter(
-            bpm=int(self.import_lrc_bpm_number.get()),
-            ignore_words=("selected" in self.import_lrc_ignore_wbw_checkbox.state()),
-            line_length_pct=float(self.import_lrc_line_pct.get()),
-            word_length_pct=float(self.import_lrc_word_pct.get())
-        )
-        with open(f, "r", encoding="utf8") as fi:
-            data = fi.readlines()
-        UserData.ultrastar_file = cvt.convert(lyrics=data, ultrastar_file=UserData.ultrastar_file)
+        UserData.ultrastar_file = LrcConverter(bpm=int(self.import_bpm_number.get())).convert(f, UserData.ultrastar_file)
         UserData.display_file()
-
         UserData.set_message("Lyrics imported successfully !")
         UserData.set_progress_bar(1)
 
@@ -137,44 +191,34 @@ class ToolsTab:
             UserData.set_message("Error: No file selected")
             return
 
-        cvt = AssConverter(bpm=int(self.import_ass_bpm_number.get()))
-        with open(f, "r", encoding="utf8") as fi:
-            data = fi.readlines()
-        UserData.ultrastar_file = cvt.convert(lyrics=data, ultrastar_file=UserData.ultrastar_file)
+        UserData.ultrastar_file = AssConverter(bpm=int(self.import_bpm_number.get())).convert(f, UserData.ultrastar_file)
         UserData.display_file()
-
         UserData.set_message("Lyrics imported successfully !")
         UserData.set_progress_bar(1)
 
-    def _split_voice(self):
-        proc = SplitterProcessor(model=self.split_voice_dropdown.get(), jobs=int(self.split_voice_jobs_number.get()), shifts=int(self.split_voice_shifts_number.get()))
-        UserData.set_message("Splitting voice ...")
+    def _run_tool(self):
+        if not self.processor_name or self.processor_name not in self._processor_by_name:
+            UserData.set_message("Error: No processor selected")
+            return
+            
+        # Get processor class and config values
+        processor_class = self._processor_by_name[self.processor_name]
+        config_values = self.get_config_values()
+        
+        # Create processor instance with config
+        try:
+            proc = processor_class(config_values)
+        except Exception as e:
+            UserData.set_message(f"Error creating processor: {str(e)}")
+            return
+            
+        UserData.set_message(f"Running {self.processor_name}...")
         UserData.set_progress_bar(-1)
 
         def cb(file):
             UserData.ultrastar_file = file
             UserData.display_file()
-            UserData.set_message("Voice splitting done !")
-            UserData.set_progress_bar(1)
-
-        UserData.start_task(cb, proc.run, UserData.ultrastar_file)
-
-    def _transliterate(self):
-        proc = TransliteratorProcessor(language=self.transliterate_dropdown.get())
-        UserData.ultrastar_file = proc.run(UserData.ultrastar_file)
-        UserData.display_file()
-        UserData.set_message("Transliteration done !")
-        UserData.set_progress_bar(1)
-
-    def _pitch(self):
-        proc = PitcherProcessor(postproc=("selected" in self.pitch_post_process_checkbox.state()))
-        UserData.set_message("Pitching ...")
-        UserData.set_progress_bar(-1)
-
-        def cb(file):
-            UserData.ultrastar_file = file
-            UserData.display_file()
-            UserData.set_message("Pitching done !")
+            UserData.set_message(f"{self.processor_name} completed!")
             UserData.set_progress_bar(1)
 
         UserData.start_task(cb, proc.run, UserData.ultrastar_file)
