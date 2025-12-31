@@ -66,6 +66,7 @@ class DownloadTab:
         self.provider_dropdown.grid(row=0, column=1, columnspan=2, padx=PAD_X, pady=PAD_Y, sticky="nsew")
         self.search_item_number_label.grid(row=0, column=3, padx=PAD_X, pady=PAD_Y, sticky="nsew")
         self.search_item_number.grid(row=0, column=4, padx=PAD_X, pady=PAD_Y, sticky="nsew")
+        self.search_item_number.set(5)
 
         self.search_bar_label.grid(row=1, column=0, padx=PAD_X, pady=PAD_Y)
         self.search_bar.grid(row=1, column=1, columnspan=6, sticky="nsew", padx=PAD_X, pady=PAD_Y)
