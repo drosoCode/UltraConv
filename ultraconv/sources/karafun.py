@@ -34,7 +34,7 @@ class KarafunSource(AbstractSource):
         return songs
 
     def download(self, item: SearchSong, types: list[SourceType], uf: UltrastarFile) -> UltrastarFile:
-        tmp_dir = uf.get_tmp_dir(clear=True)
+        tmp_dir = uf.get_tmp_dir()
         kit_file = os.path.join(tmp_dir, "karafun.kit")
         KarafunSource.client.download_kit(item.id, kit_file)
         KarafunSource.client.extract_kit(kit_file, tmp_dir)
@@ -157,19 +157,26 @@ class KarafunSource(AbstractSource):
             if page.get("kfntrackid") == kfn_track_id:
                 for line in page.findall("./line"):
                     line_data = []
-                    start = 0
-                    end = 0
-                    for word in line.findall(".//syllabe"):
-                        s = parse_time(word.find("start").text)
-                        if start == 0:
-                            start = s
-                        end = parse_time(word.find("end").text)
-                        txt = word.find("text").text
-                        line_data.append(format_duration(end - s)+txt)
+                    line_start = 0
+                    line_end = 0
+                    for word in line.findall("./word"):
+                        word_start = -1
+                        word_end = -1
+                        word_txt = ""
+                        for syllabe in word.findall("./syllabe"):
+                            if word_start == -1:
+                                word_start = parse_time(syllabe.find("start").text)
+                            word_end = parse_time(syllabe.find("end").text)
+                            word_txt += syllabe.find("text").text
+
+                        if line_start == 0:
+                            line_start = word_start
+                        line_end = word_end
+                        line_data.append(format_duration(word_end - word_start)+word_txt)
 
                     if line_data != []:
                         # Dialogue: 0,0:00:28.65,0:00:30.66,Default,,0,0,0,karaoke,
-                        ass_lines.append("Dialogue: 0," + format_time(start) + "," + format_time(end) + ",Default,,0,0,0,karaoke," + " ".join(line_data))
+                        ass_lines.append("Dialogue: 0," + format_time(line_start) + "," + format_time(line_end) + ",Default,,0,0,0,karaoke," + " ".join(line_data))
 
         with open(ass_path, "w", encoding="utf-8") as f:
             f.write("\n".join(ass_lines))
