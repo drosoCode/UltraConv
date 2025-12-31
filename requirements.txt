@@ -8,7 +8,7 @@ ultrastar-pitch
 
 # =============== Downloading ===============
 requests
-yt-dlp
+yt-dlp[default]
 
 # ============ Audio Separation =============
 demucs
