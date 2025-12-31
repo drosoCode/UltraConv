@@ -34,3 +34,8 @@ def ffmpeg_merge_convert(src_paths, dst_path):
         cmd.extend(["-i", src])
     cmd.extend(["-filter_complex", f"amerge=inputs={len(src_paths)}", "-ac", "2", dst_path])
     subprocess.run(cmd)
+
+def get_yass_path():
+    # TODO: do real detection instead of hardcoding
+    return "C:\\Program Files (x86)\\Yass Along\\yass.exe"
+
