@@ -25,11 +25,11 @@ def download_file(url: str, out_file: str, req_client=requests):
     return out_file
 
 def ffmpeg_convert(src_path, dst_path):
-    subprocess.run([get_ffmpeg_path(), "-y", "-i", src_path, dst_path])
+    subprocess.run([get_ffmpeg_path(), "-hide_banner", "-loglevel", "error", "-y", "-i", src_path, dst_path])
 
 def ffmpeg_merge_convert(src_paths, dst_path):
     # ffmpeg -i input0.mp3 -i input1.mp3 -filter_complex amerge=inputs=2 -ac 2 output.mp3
-    cmd = [get_ffmpeg_path(), "-y"]
+    cmd = [get_ffmpeg_path(), "-hide_banner", "-loglevel", "error", "-y"]
     for src in src_paths:
         cmd.extend(["-i", src])
     cmd.extend(["-filter_complex", f"amerge=inputs={len(src_paths)}", "-ac", "2", dst_path])
