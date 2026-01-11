@@ -5,6 +5,7 @@ import json
 import hashlib
 import time
 import voluptuous
+import shutil
 
 from ultraconv.processors import download_file, ffmpeg_convert, ffmpeg_merge_convert
 from ultraconv.models import AbstractSource, SearchSong, SourceInfo, SourceType, UltrastarFile
@@ -57,9 +58,9 @@ class KarafunSource(AbstractSource):
             elif t == SourceType.VOICE_AUDIO:
                 main_path = os.path.join(tmp_dir, "ld.ogg")
                 if os.path.exists(main_path):
-                    audio_path = os.path.join(uf.get_dir(), "vocals.mp3")
-                    ffmpeg_convert(main_path, audio_path)
-                    uf.tags["VOCALS"] = "vocals.mp3"
+                    audio_path = os.path.join(uf.get_dir(), "vocals.ogg")
+                    shutil.copy(main_path, audio_path)
+                    uf.tags["VOCALS"] = "vocals.ogg"
                 else:
                     print("No voice audio found.")
             
@@ -71,9 +72,9 @@ class KarafunSource(AbstractSource):
                         paths.append(x)
                 
                 if len(paths) > 0:
-                    audio_path = os.path.join(uf.get_dir(), "inst.mp3")
+                    audio_path = os.path.join(uf.get_dir(), "inst.ogg")
                     ffmpeg_merge_convert(paths, audio_path)
-                    uf.tags["INSTRUMENTAL"] = "inst.mp3"
+                    uf.tags["INSTRUMENTAL"] = "inst.ogg"
                 else:
                     print("No instrumental audio found.")
             
@@ -85,10 +86,10 @@ class KarafunSource(AbstractSource):
                         paths.append(x)
                 
                 if len(paths) > 0:
-                    audio_path = os.path.join(uf.get_dir(), "audio.mp3")
+                    audio_path = os.path.join(uf.get_dir(), "audio.ogg")
                     ffmpeg_merge_convert(paths, audio_path)
-                    uf.tags["MP3"] = "audio.mp3"
-                    uf.tags["AUDIO"] = "audio.mp3"
+                    uf.tags["MP3"] = "audio.ogg"
+                    uf.tags["AUDIO"] = "audio.ogg"
                 else:
                     print("No audio found.")
         return uf
