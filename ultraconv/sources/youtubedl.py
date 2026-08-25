@@ -1,17 +1,18 @@
 from yt_dlp import YoutubeDL
-from ultraconv.models import SearchSong
 from typing import List
 from urllib.parse import urlparse
 import os
 
-from ultraconv.processors.downloader import get_ffmpeg_path
+from ultraconv.models import SearchSong, AbstractSource, SourceType, SourceInfo, UltrastarFile
+from ultraconv.processors.utils import get_ffmpeg_path, ffmpeg_convert
 
-class YoutubeDLSource:
+class YoutubeDLSource(AbstractSource):
     # https://github.com/yt-dlp/yt-dlp?tab=readme-ov-file#extracting-information
-    def __init__(self):
+    def __init__(self, config: dict):
+        super().__init__(config)
         self._opts = {'format': 'bestaudio+bestvideo', 'noplaylist':'True', 'extract_flat':'in_playlist', 'ffmpeg_location': get_ffmpeg_path()}
 
-    def search_songs(self, search: str, nb_results: int=5) -> List[SearchSong]:
+    def search(self, search: str, nb_results: int=5) -> List[SearchSong]:
         ytdl = YoutubeDL(self._opts)
         videos = None
         try:
@@ -36,11 +37,37 @@ class YoutubeDLSource:
             ))
         return ret
 
-    def download_video(self, song: SearchSong, path: str):
-        p = os.path.join(path, "video.webm")
-        if os.path.exists(p):
-            os.remove(p)
-        self._opts["outtmpl"] = p
+    def download(self, ng: SearchSong, types: list[SourceType], uf: UltrastarFile) -> UltrastarFile:
+        tmp_dir = uf.get_tmp_dir()
+
+        vid_path = os.path.join(tmp_dir, "video.webm")
+        if os.path.exists(vid_path):
+            os.remove(vid_path)
+        self._opts["outtmpl"] = vid_path
         ytdl = YoutubeDL(self._opts)
-        ytdl.download([song.id])
-        return p
+        ytdl.download([ng.id])
+
+        for t in types:
+            if t == SourceType.VIDEO:
+                ffmpeg_convert(vid_path, os.path.join(uf.get_dir(), "video.mp4"))
+                uf.tags["VIDEO"] = "video.mp4"
+            elif t == SourceType.AUDIO:
+                audio_path = os.path.join(uf.get_dir(), "audio.mp3")
+                ffmpeg_convert(vid_path, audio_path)
+                uf.tags["AUDIO"] = "audio.mp3"
+                uf.tags["MP3"] = "audio.mp3"
+
+    @staticmethod
+    def get_info() -> SourceInfo:
+        return SourceInfo(
+            name="YoutubeDL",
+            description="Download videos and audio from YouTube and other sites using yt-dlp",
+            supported_types=[
+                SourceType.VIDEO,
+                SourceType.AUDIO,
+            ]
+        )
+
+    @staticmethod
+    def is_available():
+        return True

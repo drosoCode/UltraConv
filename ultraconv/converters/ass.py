@@ -5,7 +5,7 @@ from math import floor
 from typing import List
 
 class AssConverter:
-    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([\w'’,]+)( ?)")
+    FLAG_REG = re.compile(r"\{\\kf?(\d+)\}([\w'’,()]+)( ?)")
     bpm = 250
 
     def __init__(self, bpm=250):
@@ -22,8 +22,13 @@ class AssConverter:
     
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
+    
+    def _get_lyrics(self, path: str) -> List[str]:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.readlines()
 
-    def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
+    def convert(self, lyrics_file_path: str, ultrastar_file=UltrastarFile()) -> UltrastarFile:
+        lyrics = self._get_lyrics(lyrics_file_path)
         ultrastar_file.tags["BPM"] = self.bpm
         ret = []
         is_gap_set = False
@@ -31,10 +36,10 @@ class AssConverter:
         prev_end = 0
         for i in lyrics:
             # iterate over lines of text
-            if len(i) > 9 and i[0:9] == "Comment: ":
+            if len(i) > 10 and i[0:10] == "Dialogue: ":
                 s = i.split(",")
                 start = self._parse_time(s[1])
-                txt = self.FLAG_REG.findall(s[9])
+                txt = self.FLAG_REG.findall("".join(s[9:]))
                 #example text: {\k21}PLAN{\k18}dae{\k12}ro {\k29}KEEP {\k29}GOING
 
                 # iterate over words to count letters, if empty skip the line

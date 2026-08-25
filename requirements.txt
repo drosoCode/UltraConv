@@ -1,7 +1,33 @@
-demucs
-syncedlyrics
-requests
-yt-dlp
+
+# ================== Base ===================
+voluptuous # config validation
+sv_ttk # ui theme
+
+# ================ Pitching =================
 ultrastar-pitch
-https://github.com/cgohlke/pyicu-build/releases/download/v2.14/PyICU-2.14-cp313-cp313-win_amd64.whl
-sv_ttk
+
+# =============== Downloading ===============
+requests
+yt-dlp[default]
+
+# ============ Audio Separation =============
+demucs
+
+# ============= Transliteration =============
+
+# pyicu (supports all writing systems, but annoying to install and not very accurate)
+PyICU
+#https://github.com/cgohlke/pyicu-build/releases/download/v2.14/PyICU-2.14-cp313-cp313-win_amd64.whl
+
+# cutlet (japanese)
+cutlet
+fugashi[unidic-lite]
+
+# pykakasi (japanese to kanji/katakana/hiragana/latin)
+pykakasi
+
+# hangul_romanize (korean to latin)
+hangul_romanize
+
+# unidecode (any to latin; but bad for CJK)
+unidecode

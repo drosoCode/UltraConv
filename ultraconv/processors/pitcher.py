@@ -1,19 +1,24 @@
-from ultrastar_pitch import DetectionPipeline, AudioPreprocessor, PitchClassifier, StochasticPostprocessor, ProjectParser
-
 from pathlib import Path
 import os
 
-from ultraconv.models import UltrastarFile
+from voluptuous import Schema, Required
 
-class PitcherProcessor:
+from ultraconv.models import UltrastarFile, AbstractProcessor, ProcessorType, ProcessorInfo
 
-    def __init__(self, postproc = True):
-        self._postproc = postproc
+try:
+    from ultrastar_pitch import DetectionPipeline, ProjectParser, AudioPreprocessor, PitchClassifier, StochasticPostprocessor
+    USTAR_PITCH_AVAILABLE = True
+except ImportError:
+    USTAR_PITCH_AVAILABLE = False
+
+class PitcherUltrastarPitch(AbstractProcessor):
+
+    def __init__(self, config):
+        super().__init__(config)
+        self._postproc = config.get("postproc", True)
 
     def run(self, data: UltrastarFile) -> UltrastarFile:
-        if data.tags.get("VOCALS") is None:
-            print("Error: No vocals file found in tags")
-            return None
+        data.check_fields(["VOCALS", "MP3"])
         
         # set mp3 to vocals file
         p = Path(data.file_path)
@@ -37,3 +42,23 @@ class PitcherProcessor:
         data.file_path = filepath_bak
 
         return data
+
+    @staticmethod
+    def get_info() -> ProcessorInfo:
+        """Return the info of the processor."""
+        return ProcessorInfo(
+            name="UltrastarPitch Pitcher",
+            description="Generates pitch events using UltrastarPitch library.",
+            processor_type=ProcessorType.PITCHER
+        )
+    
+    @staticmethod
+    def is_available():
+        """Check if the pitcher is available."""
+        return USTAR_PITCH_AVAILABLE
+    
+    @staticmethod
+    def get_options():
+        return Schema({
+            Required("postproc", default=True): bool
+        })

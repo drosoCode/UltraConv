@@ -9,18 +9,13 @@ from typing import List
 # in the case of non well synced lyrics, use the ignore_words=True flag to ignore this data and use the syncing algorithm
 
 class LrcConverter:
-    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([\w'’,]+)")
-    LRC_LINE_REG = re.compile(r"([\w'’,]+) *")
+    LRC_REG = re.compile(r"<(\d{2}:\d{2}.\d{2})> +([\w'’,()]+)")
+    LRC_LINE_REG = re.compile(r"([\w'’,()]+) *")
     bpm = 0
-    ignore_words = False
-    line_length_pct = 0
-    word_length_pct = 0
+    word_length_pct = 0.85 # lrc format only gives start time of words, so we can only use part of the timeframe for the actual word (so we keep some time for the space between words)
 
-    def __init__(self, bpm=400, ignore_words=False, line_length_pct=0.95, word_length_pct=0.8):
+    def __init__(self, bpm=400):
         self.bpm = bpm
-        self.ignore_words = ignore_words
-        self.line_length_pct = line_length_pct
-        self.word_length_pct = word_length_pct
 
     def _parse_time(self, time_str):
         # Convert a time string in the format MM:SS.MS to the number of seconds
@@ -34,7 +29,12 @@ class LrcConverter:
     def _sec_to_bpm(self, val):
         return floor(val/60*self.bpm*4) # no idea why, but x4 fixes all sync problems
 
-    def convert(self, lyrics: List[str], ultrastar_file=UltrastarFile()) -> UltrastarFile:
+    def _get_lyrics(self, path: str) -> List[str]:
+        with open(path, "r", encoding="utf-8") as f:
+            return f.readlines()
+    
+    def convert(self, lyrics_file_path: str, ultrastar_file=UltrastarFile()) -> UltrastarFile:
+        lyrics = self._get_lyrics(lyrics_file_path)
         ultrastar_file.tags["BPM"] = self.bpm
         ret = []
         is_gap_set = False
@@ -44,7 +44,6 @@ class LrcConverter:
         for i in range(lrc_len):
             # iterate over lines of text
             is_word_by_word = True
-            avg_sec_by_word = 0
 
             if len(lyrics[i]) > 11 and lyrics[i][0] == "[" and lyrics[i][9] == "]":
                 start = self._parse_time(lyrics[i][1:9])
@@ -62,55 +61,44 @@ class LrcConverter:
                 if nb_letters == 0:
                     continue
 
-                if not is_word_by_word or self.ignore_words:
-                    if i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
-                        next_start = self._parse_time(lyrics[i+1][1:9])
-                    line_duration = (next_start-start)*self.line_length_pct # use 90% of line length for word, and keep 10% for the break
-                    avg_sec_by_word = line_duration/nb_letters
-
                 # processing =================
                 if not is_gap_set:
                     # if this is the first line, add the GAP
                     is_gap_set = True
                     ultrastar_file.tags["GAP"] = floor(start)
-                else:
-                    if not is_word_by_word or self.ignore_words:
-                        prev_line = self._parse_time(lyrics[i-1][1:9])
-                        break_duration = ((start-prev_line)*(1-self.line_length_pct))
-                        ret.append(UltrastarBreak(floor(self._sec_to_bpm(start-break_duration))))
-                    else:
-                        ret.append(UltrastarBreak(floor(self._sec_to_bpm(next_break))))
-                
+                        
                 txt_len = len(txt)
-                total_sec = start
+                next_break = start/(txt_len+1) * txt_len
                 for j in range(txt_len):
-                    if is_word_by_word and not self.ignore_words:
+                    if is_word_by_word:
                         word = txt[j][1]
                         start_sec = self._parse_time(txt[j][0])
-                        if j+1 < txt_len:
+                        
+                        next_word_available = j+1 < txt_len
+                        if next_word_available:
                             # get start of next word
                             next_sec = self._parse_time(txt[j+1][0])
-                        elif i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
-                            # if not available, take start of next line
-                            next_sec = self._parse_time(lyrics[i+1][1:9])
-                            word_duration = ((next_sec-start_sec)*self.word_length_pct) # use the remaining 10% of the timeframe for the break (see duration_sec below)
-                            next_break = start_sec+word_duration
                         else:
-                            # if not available, use an arbitrary time of 3 sec
-                            next_sec = start_sec + 3
+                            if i+1 < lrc_len and len(lyrics[i+1]) >= 10 and lyrics[i+1][0] == "[" and lyrics[i+1][9] == "]":
+                                # if not available, take start of next line
+                                next_sec = self._parse_time(lyrics[i+1][1:9])
+                            else:
+                                # if not available, use an arbitrary time of 3 sec
+                                next_sec = start_sec + 3
+                            
                         duration_sec = (next_sec-start_sec)*self.word_length_pct # use only 80% of the timeframe as we also need "blank" space between words
+                        if not next_word_available:
+                            next_break = start_sec + duration_sec  # use the remaining 20% of the timeframe for the break (see duration_sec below)
                     else:
-                        if is_word_by_word:
-                            word = txt[j][1]
-                        else:
-                            word = txt[j]
-                        start_sec = total_sec
-                        duration_sec = len(word)*avg_sec_by_word
-                        total_sec += duration_sec
-                        duration_sec *= self.word_length_pct # use only 80% of the timeframe as we also need "blank" space between words
-                    
+                        # set arbitrary values since the word timing is not available; it should then be re-aligned using a LYRICS_ALIGNER processor
+                        start_sec = start
+                        duration_sec = 0.1
+                        word = txt[j]
+
                     # StartBeat, Length, Pitch, Text
                     ret.append(UltrastarText(time=self._sec_to_bpm(start_sec), length=self._sec_to_bpm(duration_sec), pitch=0, start_space=True, text=word))
+                # add break at end of line
+                ret.append(UltrastarBreak(floor(self._sec_to_bpm(next_break))))
 
         ultrastar_file.events = ret
         return ultrastar_file

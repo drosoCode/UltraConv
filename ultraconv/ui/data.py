@@ -2,7 +2,7 @@ from pathlib import Path
 from ultraconv.models import UltrastarFile
 from tkinter import ttk, scrolledtext
 from concurrent.futures import ThreadPoolExecutor, Future
-
+import traceback
 
 class UserData:
 
@@ -57,9 +57,15 @@ class UserData:
 
     @staticmethod
     def _check_task():
-        if UserData._future.done():
-            ret = UserData._future.result()
+        try:
+            if UserData._future.done():
+                ret = UserData._future.result()
+                UserData._future = None
+                UserData._callback(ret)
+            else:
+                UserData.ui_root.after(1000, UserData._check_task)
+        except Exception as e:
             UserData._future = None
-            UserData._callback(ret)
-        else:
-            UserData.ui_root.after(1000, UserData._check_task)
+            UserData.set_message(f"Error: {str(e)}")
+            UserData.set_progress_bar(1)
+            traceback.print_exc()

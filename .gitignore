@@ -3,3 +3,5 @@ __pycache__
 build/
 dist/
 ffmpeg-*
+config_sources.json
+test.py
